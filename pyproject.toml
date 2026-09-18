@@ -1,0 +1,38 @@
+[project]
+name = "obrag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Rochak Agarwal", email = "rochak.ag779@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.5.9",
+    "google-genai>=2.24.0",
+    "lxml>=6.1.3",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+    "pyyaml>=6.0.3",
+    "requests>=2.34.2",
+    "streamlit>=1.64.0",
+    "voyageai>=0.5.0",
+]
+
+[project.scripts]
+obrag = "obrag:main"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-mock>=3.15.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["network: hits a real network endpoint (deselected by default)"]
+addopts = "-m 'not network'"
