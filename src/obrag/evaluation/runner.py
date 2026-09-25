@@ -116,13 +116,17 @@ def _chunks_by_citation(settings: Settings) -> dict[str, Chunk]:
     return {chunk.citation: chunk for chunk in chunks}
 
 
-def rescore(run_id: int, settings: Settings, golden_path=None) -> None:
+def rescore(run_id: int, settings: Settings, golden_path=None, only_missing: bool = False) -> None:
     """Re-judge groundedness from stored answers and fill in missing correctness.
 
     Groundedness is judged against the sources the answer cites, rebuilt from
     the raw snapshot, because a run stores citations but not the full retrieved
     set. Refusals keep their automatic 1.0. Retrieval relevance needs the full
     retrieved set, so a missing relevance score stays missing.
+
+    A full pass clears a groundedness score it fails to re-judge: keeping the
+    stale one would pass off a known-bad number as real. only_missing=True
+    then re-judges just the gaps.
     """
     store = EvalStore(settings)
     points = {q.id: q.expected_points for q in load_golden(golden_path)}
@@ -133,9 +137,10 @@ def rescore(run_id: int, settings: Settings, golden_path=None) -> None:
         cited = [RetrievedChunk(by_citation[c], 1.0) for c in row["citations"] if c in by_citation]
         answer = Answer(text=row["answer"], citations=row["citations"], refused=False, retrieved=cited)
         fields = {}
-        grounded = _safely("groundedness", row["question_id"], score_groundedness, answer, settings)
-        if grounded is not None:
-            fields["groundedness"] = grounded
+        if not only_missing or row["groundedness"] is None:
+            fields["groundedness"] = _safely(
+                "groundedness", row["question_id"], score_groundedness, answer, settings
+            )
         if row["correctness"] is None:
             correct = _safely("correctness", row["question_id"], score_correctness,
                               answer, points.get(row["question_id"], []), settings)
@@ -176,11 +181,12 @@ def main() -> None:
     parser.add_argument("--label", help="name for this run, e.g. 'baseline'")
     parser.add_argument("--resume", type=int, metavar="RUN_ID", help="finish an interrupted run")
     parser.add_argument("--rescore", type=int, metavar="RUN_ID", help="re-judge a finished run")
+    parser.add_argument("--fill-missing", action="store_true", help="with --rescore, only judge gaps")
     args = parser.parse_args()
 
     settings = load_settings()
     if args.rescore is not None:
-        rescore(args.rescore, settings)
+        rescore(args.rescore, settings, only_missing=args.fill_missing)
         for band, scores in summarise(EvalStore(settings).results(args.rescore)).items():
             print(f"  {band}: {scores}")
         return

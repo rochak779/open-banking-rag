@@ -190,3 +190,35 @@ def test_summarise_reports_answerable_questions_separately():
     assert summary["answerable"]["correctness"] == 0.4
     assert summary["answerable"]["n"] == 1
     assert summary["overall"]["correctness"] == 0.7
+
+
+def _one_answered_row(tmp_path, monkeypatch, groundedness):
+    settings = make_settings(tmp_path)
+    store = runner.EvalStore(settings)
+    run_id = store.create_run("baseline", {})
+    store.record(run_id, {"question_id": "reg-01", "band": "regulation_only", "answer": "SCA [1].",
+                          "refused": False, "citations": ["PSR 2017, regulation 100"],
+                          "groundedness": groundedness, "correctness": 0.5})
+    monkeypatch.setattr(runner, "load_golden", lambda path=None: GOLDEN)
+    monkeypatch.setattr(runner, "_chunks_by_citation", lambda settings: {"PSR 2017, regulation 100": HIT.chunk})
+    return settings, store, run_id
+
+
+def test_a_failed_rejudge_clears_the_stale_score(tmp_path, monkeypatch):
+    settings, store, run_id = _one_answered_row(tmp_path, monkeypatch, groundedness=0.0)
+
+    def exploding(a, s, client=None):
+        raise RuntimeError("500")
+
+    monkeypatch.setattr(runner, "score_groundedness", exploding)
+    runner.rescore(run_id, settings)
+    assert store.results(run_id)[0]["groundedness"] is None
+
+
+def test_fill_missing_only_judges_gaps(tmp_path, monkeypatch):
+    settings, store, run_id = _one_answered_row(tmp_path, monkeypatch, groundedness=0.8)
+    calls = []
+    monkeypatch.setattr(runner, "score_groundedness", lambda a, s, client=None: calls.append(a) or 0.1)
+    runner.rescore(run_id, settings, only_missing=True)
+    assert calls == []
+    assert store.results(run_id)[0]["groundedness"] == 0.8
