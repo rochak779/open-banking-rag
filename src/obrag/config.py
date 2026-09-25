@@ -71,4 +71,6 @@ def load_settings() -> Settings:
         # Free-tier escape hatch: gemini-3.8-flash allows only 20 requests/day on the
         # free tier, so .env can point generation at a model with more headroom.
         generation_model=os.environ.get("OBRAG_GENERATION_MODEL", "gemini-3.8-flash"),
+        # gemini-3.1-pro-preview has no free-tier quota; .env points the judge at Gemma.
+        judge_model=os.environ.get("OBRAG_JUDGE_MODEL", "gemini-3.1-pro-preview"),
     )

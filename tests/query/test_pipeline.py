@@ -52,3 +52,19 @@ def test_ask_returns_a_refusal_when_nothing_is_retrieved(monkeypatch):
     answer = pipeline.ask("what is the capital of France?", settings=make_settings())
     assert answer.refused is True
     assert answer.citations == []
+
+
+def test_ask_with_route_returns_the_collections_the_answer_used(monkeypatch):
+    monkeypatch.setattr(pipeline, "route", lambda q, s, client=None: ["spec"])
+
+    class EmptyRetriever:
+        def __init__(self, settings):
+            pass
+
+        def retrieve(self, question, collections):
+            return []
+
+    monkeypatch.setattr(pipeline, "Retriever", EmptyRetriever)
+    collections, answer = pipeline.ask_with_route("q", settings=make_settings())
+    assert collections == ["spec"]
+    assert answer.refused is True
