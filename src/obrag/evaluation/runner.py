@@ -1,6 +1,7 @@
 """Run the golden set end to end and persist every score."""
 
 import argparse
+import time
 from statistics import mean
 
 from obrag.config import Settings, load_settings
@@ -14,6 +15,28 @@ from obrag.evaluation.storage import EvalStore, load_golden
 from obrag.query.pipeline import ask_with_route
 
 SCORE_FIELDS = ("retrieval_relevance", "groundedness", "correctness")
+
+ASK_ATTEMPTS = 3
+RETRY_WAIT_SECONDS = 30
+
+
+def _ask_with_retries(question_id: str, question: str, settings: Settings):
+    """ask_with_route, retried on failure; None if every attempt fails.
+
+    A network drop to Voyage aborted a 2-hour run on question 6. A question
+    that still fails is skipped rather than recorded: a stand-in row (say, a
+    refusal) would distort refusal accuracy, while a gap shows up in n.
+    """
+    for attempt in range(1, ASK_ATTEMPTS + 1):
+        try:
+            return ask_with_route(question, settings=settings)
+        except Exception as error:  # noqa: BLE001 - network, quota or server errors alike
+            print(f"    {question_id}: ask failed, attempt {attempt}/{ASK_ATTEMPTS} "
+                  f"({type(error).__name__}: {error})")
+            if attempt < ASK_ATTEMPTS:
+                time.sleep(RETRY_WAIT_SECONDS)
+    print(f"    {question_id}: SKIPPED after {ASK_ATTEMPTS} attempts")
+    return None
 
 
 def _safely(label: str, question_id: str, score, *args):
@@ -29,22 +52,34 @@ def _safely(label: str, question_id: str, score, *args):
         return None
 
 
-def run_eval(label: str, settings: Settings, golden_path=None) -> int:
+def run_eval(label: str, settings: Settings, golden_path=None, resume_run_id: int | None = None) -> int:
+    """Score every golden question; with resume_run_id, finish an interrupted run."""
     store = EvalStore(settings)
-    run_id = store.create_run(
-        label,
-        {
-            "embedding_model": settings.embedding_model,
-            "router_model": settings.router_model,
-            "generation_model": settings.generation_model,
-            "judge_model": settings.judge_model,
-            "top_k": settings.top_k,
-            "min_score": settings.min_score,
-        },
-    )
+    if resume_run_id is None:
+        run_id = store.create_run(
+            label,
+            {
+                "embedding_model": settings.embedding_model,
+                "router_model": settings.router_model,
+                "generation_model": settings.generation_model,
+                "judge_model": settings.judge_model,
+                "top_k": settings.top_k,
+                "min_score": settings.min_score,
+            },
+        )
+        done: set[str] = set()
+    else:
+        run_id = resume_run_id
+        done = {row["question_id"] for row in store.results(run_id)}
+        print(f"resuming run {run_id}: {len(done)} questions already scored")
 
     for question in load_golden(golden_path):
-        routed, answer = ask_with_route(question.question, settings=settings)
+        if question.id in done:
+            continue
+        asked = _ask_with_retries(question.id, question.question, settings)
+        if asked is None:
+            continue
+        routed, answer = asked
         routing_correct = (
             set(routed) == set(question.expected_collections)
             if question.expected_collections
@@ -96,6 +131,7 @@ def summarise(results: list[dict]) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the obrag golden-set evaluation.")
     parser.add_argument("--label", required=True, help="name for this run, e.g. 'baseline'")
+    parser.add_argument("--resume", type=int, metavar="RUN_ID", help="finish an interrupted run")
     args = parser.parse_args()
 
     settings = load_settings()
@@ -103,7 +139,7 @@ def main() -> None:
         f"running '{args.label}' with {settings.embedding_model} / "
         f"{settings.generation_model} / judge {settings.judge_model}"
     )
-    run_id = run_eval(args.label, settings)
+    run_id = run_eval(args.label, settings, resume_run_id=args.resume)
 
     summary = summarise(EvalStore(settings).results(run_id))
     print(f"\nrun {run_id} — {args.label}")

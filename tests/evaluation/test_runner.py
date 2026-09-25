@@ -103,3 +103,50 @@ def test_summarise_reports_how_many_scores_are_missing():
     summary = runner.summarise(rows)
     assert summary["overall"]["groundedness"] == 0.5
     assert summary["overall"]["missing_scores"] == 1
+
+
+def test_a_transient_pipeline_failure_is_retried(tmp_path, monkeypatch):
+    patch_everything(monkeypatch, lambda q: Answer(text="a", citations=[], refused=False, retrieved=[HIT]))
+    monkeypatch.setattr(runner, "RETRY_WAIT_SECONDS", 0)
+    attempts = []
+
+    def flaky(q, settings=None):
+        attempts.append(q)
+        if len(attempts) == 1:
+            raise ConnectionError("Remote end closed connection without response")
+        return ["regulation"], Answer(text="a", citations=[], refused=False, retrieved=[HIT])
+
+    monkeypatch.setattr(runner, "ask_with_route", flaky)
+    assert len(rows_for(tmp_path)) == 2
+    assert len(attempts) == 3  # one retry for the first question, then one call for the second
+
+
+def test_a_question_that_keeps_failing_is_skipped_not_recorded(tmp_path, monkeypatch):
+    patch_everything(monkeypatch, lambda q: Answer(text="a", citations=[], refused=False, retrieved=[HIT]))
+    monkeypatch.setattr(runner, "RETRY_WAIT_SECONDS", 0)
+
+    def broken_for_reg(q, settings=None):
+        if "SCA" in q:
+            raise ConnectionError("down")
+        return [], Answer(text="a", citations=[], refused=True, retrieved=[])
+
+    monkeypatch.setattr(runner, "ask_with_route", broken_for_reg)
+    # A made-up row (e.g. a fake refusal) would distort refusal accuracy; a gap is honest.
+    assert sorted(rows_for(tmp_path)) == ["unans-01"]
+
+
+def test_resume_skips_questions_already_recorded_in_that_run(tmp_path, monkeypatch):
+    patch_everything(monkeypatch, lambda q: Answer(text="a", citations=[], refused=False, retrieved=[HIT]))
+    settings = make_settings(tmp_path)
+    store = runner.EvalStore(settings)
+    run_id = store.create_run("baseline", {})
+    store.record(run_id, {"question_id": "reg-01", "band": "regulation_only"})
+
+    asked = []
+    monkeypatch.setattr(
+        runner, "ask_with_route",
+        lambda q, settings=None: asked.append(q) or ([], Answer(text="a", citations=[], refused=True, retrieved=[])),
+    )
+    assert runner.run_eval("baseline", settings, resume_run_id=run_id) == run_id
+    assert asked == ["barclays rate limit?"]
+    assert len(store.results(run_id)) == 2
