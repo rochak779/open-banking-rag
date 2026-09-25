@@ -57,3 +57,10 @@ def test_judge_model_can_be_overridden_from_the_environment(monkeypatch):
     monkeypatch.setenv("VOYAGE_API_KEY", "pa-test")
     monkeypatch.setenv("OBRAG_JUDGE_MODEL", "gemma-4-31b-it")
     assert load_settings().judge_model == "gemma-4-31b-it"
+
+
+def test_chroma_dir_can_be_overridden_from_the_environment(monkeypatch, tmp_path):
+    monkeypatch.setenv("GEMINI_API_KEY", "ai-test")
+    monkeypatch.setenv("VOYAGE_API_KEY", "pa-test")
+    monkeypatch.setenv("OBRAG_CHROMA_DIR", str(tmp_path / "chroma-law"))
+    assert load_settings().chroma_dir == tmp_path / "chroma-law"

@@ -78,4 +78,6 @@ def load_settings() -> Settings:
         # gemini-3.1-pro-preview has no free-tier quota; .env points the judge at Gemma.
         judge_model=os.environ.get("OBRAG_JUDGE_MODEL", "gemini-3.1-pro-preview"),
         min_score=float(os.environ.get("OBRAG_MIN_SCORE", "0.28")),
+        # Lets a second embedding model be indexed side by side for an A/B.
+        chroma_dir=Path(os.environ.get("OBRAG_CHROMA_DIR", DATA / "chroma")),
     )
