@@ -1,13 +1,12 @@
 """Streamlit front end: ask questions, see citations, read the eval numbers.
 
-Display decisions live in format_answer, summary_rows and answer_for so they can
+Display decisions live in format_answer, summary_rows and obrag.app.limits so they can
 be tested without launching a browser; everything below them is layout.
 """
 
-from collections.abc import Callable
-
 import streamlit as st
 
+from obrag.app.limits import QueryBudget, cache_answer, cached_answer, resolve_answer
 from obrag.config import DISCLAIMER, SNAPSHOT_DATE, load_settings
 from obrag.evaluation.runner import summarise
 from obrag.evaluation.storage import EvalStore
@@ -20,6 +19,9 @@ EXAMPLES = [
     "What does POST /domestic-payment-consents return on success?",
     "What is Barclays' rate limit on the accounts endpoint?",
 ]
+
+# Two model calls per question against a 500/day free quota shared by all visitors.
+MAX_QUERIES_PER_SESSION = 10
 
 
 def format_answer(answer: Answer) -> str:
@@ -38,17 +40,6 @@ def summary_rows(summary: dict) -> list[dict]:
     return [{"band": band, **summary[band]} for band in ordered if band in summary]
 
 
-def answer_for(question: str, cache: dict, ask_fn: Callable[[str], Answer]) -> Answer:
-    """Ask once per distinct question and reuse the answer on every rerun.
-
-    Streamlit reruns the whole script on any click, including switching tabs,
-    and each fresh ask() spends two calls of the free-tier daily quota.
-    """
-    key = " ".join(question.split()).lower()
-    if key not in cache:
-        cache[key] = ask_fn(question)
-    return cache[key]
-
 
 def render_ask_tab(settings) -> None:
     st.caption(f"Snapshot: {SNAPSHOT_DATE}")
@@ -63,11 +54,27 @@ def render_ask_tab(settings) -> None:
     if not question:
         return
 
-    cache = st.session_state.setdefault("answers", {})
+    budget = QueryBudget(max_queries=MAX_QUERIES_PER_SESSION)
+    session_answers = st.session_state.setdefault("answers", {})
     with st.spinner("Routing, retrieving and answering..."):
-        answer = answer_for(question, cache, lambda q: ask(q, settings=settings))
+        answer, source = resolve_answer(
+            question, session_answers, st.session_state, budget,
+            lambda q: ask(q, settings=settings),
+        )
+    if answer is None:
+        st.error(
+            f"This demo allows {MAX_QUERIES_PER_SESSION} questions per session to stay within "
+            "its free API quota. The example questions above are still available — they are "
+            "pre-cached. Reload the page to start a new session."
+        )
+        return
+
     st.markdown(f"**Q:** {question}")
     st.markdown(format_answer(answer))
+    if source == "example":
+        st.caption("Cached example answer — no API call made.")
+    else:
+        st.caption(f"{budget.remaining(st.session_state)} questions remaining this session.")
 
     with st.expander(f"Retrieved chunks ({len(answer.retrieved)})"):
         for item in answer.retrieved:
@@ -96,6 +103,15 @@ def main() -> None:
     st.warning(DISCLAIMER)
 
     settings = load_settings()
+    # The example cache is module-level, so it is shared by every session in this
+    # process: a cold start costs one ask() per example, not every visitor.
+    if "obrag_examples_cached" not in st.session_state:
+        with st.spinner("Warming up the example answers..."):
+            for example in EXAMPLES:
+                if cached_answer(example) is None:
+                    cache_answer(example, ask(example, settings=settings))
+        st.session_state["obrag_examples_cached"] = True
+
     ask_tab, eval_tab = st.tabs(["Ask", "Evaluation"])
     with ask_tab:
         render_ask_tab(settings)

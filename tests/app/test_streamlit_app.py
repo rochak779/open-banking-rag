@@ -1,4 +1,4 @@
-from obrag.app.streamlit_app import answer_for, format_answer, summary_rows
+from obrag.app.streamlit_app import format_answer, summary_rows
 from obrag.models import Answer, Chunk, RetrievedChunk
 
 HIT = RetrievedChunk(
@@ -34,22 +34,6 @@ def test_summary_rows_flatten_bands_for_a_table():
     rows = summary_rows(summary)
     assert {r["band"] for r in rows} == {"overall", "unanswerable"}
     assert rows[0]["band"] == "overall"
-
-
-def test_a_question_is_only_sent_to_the_models_once():
-    # Streamlit reruns the whole script on every click; without this cache,
-    # switching tabs re-asks the last question and burns free-tier quota.
-    calls = []
-
-    def fake_ask(question):
-        calls.append(question)
-        return Answer(text="a", citations=[], refused=False, retrieved=[])
-
-    cache: dict = {}
-    first = answer_for("When is SCA required?", cache, fake_ask)
-    second = answer_for("  when is SCA required? ", cache, fake_ask)
-    assert first is second
-    assert calls == ["When is SCA required?"]
 
 
 def test_citation_numbers_in_the_text_match_the_source_list():
