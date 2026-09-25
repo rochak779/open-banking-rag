@@ -14,6 +14,7 @@ def test_load_settings_reads_keys_from_environment(monkeypatch):
 def test_model_ids_are_exact(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "ai-test")
     monkeypatch.setenv("VOYAGE_API_KEY", "pa-test")
+    monkeypatch.delenv("OBRAG_GENERATION_MODEL", raising=False)
     s = load_settings()
     assert s.generation_model == "gemini-3.8-flash"
     assert s.router_model == "gemini-3.5-flash-lite"
@@ -38,3 +39,10 @@ def test_settings_is_frozen(monkeypatch):
     s = load_settings()
     with pytest.raises(Exception):
         s.top_k = 99  # type: ignore[misc]
+
+
+def test_generation_model_can_be_overridden_from_the_environment(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "ai-test")
+    monkeypatch.setenv("VOYAGE_API_KEY", "pa-test")
+    monkeypatch.setenv("OBRAG_GENERATION_MODEL", "gemini-3.5-flash-lite")
+    assert load_settings().generation_model == "gemini-3.5-flash-lite"

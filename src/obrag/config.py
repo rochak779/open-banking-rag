@@ -66,4 +66,7 @@ def load_settings() -> Settings:
         gemini_api_key=_require("GEMINI_API_KEY"),
         voyage_api_key=_require("VOYAGE_API_KEY"),
         embedding_model=os.environ.get("OBRAG_EMBEDDING_MODEL", "voyage-4-lite"),
+        # Free-tier escape hatch: gemini-3.8-flash allows only 20 requests/day on the
+        # free tier, so .env can point generation at a model with more headroom.
+        generation_model=os.environ.get("OBRAG_GENERATION_MODEL", "gemini-3.8-flash"),
     )
