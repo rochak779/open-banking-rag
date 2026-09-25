@@ -46,3 +46,12 @@ def test_results_are_scoped_to_their_run(tmp_path):
     b = store.create_run("b", {})
     store.record(a, {"question_id": "q1", "band": "regulation_only"})
     assert store.results(b) == []
+
+
+def test_update_changes_named_fields_of_one_result(tmp_path):
+    store = EvalStore(make_settings(tmp_path))
+    run_id = store.create_run("baseline", {})
+    store.record(run_id, {"question_id": "q1", "band": "spec_only", "groundedness": 0.0, "correctness": None})
+    store.update(run_id, "q1", {"groundedness": 1.0, "correctness": 0.5})
+    row = store.results(run_id)[0]
+    assert (row["groundedness"], row["correctness"]) == (1.0, 0.5)

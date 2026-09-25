@@ -12,6 +12,9 @@ from obrag.evaluation.metrics import (
     score_retrieval_relevance,
 )
 from obrag.evaluation.storage import EvalStore, load_golden
+from obrag.ingest.legislation import parse_all_legislation
+from obrag.ingest.obl_spec import parse_spec_dir
+from obrag.models import Answer, Chunk, RetrievedChunk
 from obrag.query.pipeline import ask_with_route
 
 SCORE_FIELDS = ("retrieval_relevance", "groundedness", "correctness")
@@ -106,6 +109,43 @@ def run_eval(label: str, settings: Settings, golden_path=None, resume_run_id: in
     return run_id
 
 
+def _chunks_by_citation(settings: Settings) -> dict[str, Chunk]:
+    """Every indexed chunk, keyed by citation, parsed from the pinned raw sources."""
+    spec_dir = settings.raw_dir / f"obl-specs-{settings.obl_spec_tag}" / "dist" / "openapi"
+    chunks = parse_all_legislation(settings.raw_dir) + parse_spec_dir(spec_dir)
+    return {chunk.citation: chunk for chunk in chunks}
+
+
+def rescore(run_id: int, settings: Settings, golden_path=None) -> None:
+    """Re-judge groundedness from stored answers and fill in missing correctness.
+
+    Groundedness is judged against the sources the answer cites, rebuilt from
+    the raw snapshot, because a run stores citations but not the full retrieved
+    set. Refusals keep their automatic 1.0. Retrieval relevance needs the full
+    retrieved set, so a missing relevance score stays missing.
+    """
+    store = EvalStore(settings)
+    points = {q.id: q.expected_points for q in load_golden(golden_path)}
+    by_citation = _chunks_by_citation(settings)
+    for row in store.results(run_id):
+        if row["refused"]:
+            continue
+        cited = [RetrievedChunk(by_citation[c], 1.0) for c in row["citations"] if c in by_citation]
+        answer = Answer(text=row["answer"], citations=row["citations"], refused=False, retrieved=cited)
+        fields = {}
+        grounded = _safely("groundedness", row["question_id"], score_groundedness, answer, settings)
+        if grounded is not None:
+            fields["groundedness"] = grounded
+        if row["correctness"] is None:
+            correct = _safely("correctness", row["question_id"], score_correctness,
+                              answer, points.get(row["question_id"], []), settings)
+            if correct is not None:
+                fields["correctness"] = correct
+        if fields:
+            store.update(run_id, row["question_id"], fields)
+        print(f"  {row['question_id']}: {fields}")
+
+
 def summarise(results: list[dict]) -> dict:
     def block(rows: list[dict]) -> dict:
         out = {}
@@ -123,6 +163,9 @@ def summarise(results: list[dict]) -> dict:
         return out
 
     summary = {"overall": block(results)}
+    answerable = [r for r in results if r["band"] != "unanswerable"]
+    if answerable and len(answerable) < len(results):
+        summary["answerable"] = block(answerable)
     for band in sorted({r["band"] for r in results}):
         summary[band] = block([r for r in results if r["band"] == band])
     return summary
@@ -130,11 +173,19 @@ def summarise(results: list[dict]) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the obrag golden-set evaluation.")
-    parser.add_argument("--label", required=True, help="name for this run, e.g. 'baseline'")
+    parser.add_argument("--label", help="name for this run, e.g. 'baseline'")
     parser.add_argument("--resume", type=int, metavar="RUN_ID", help="finish an interrupted run")
+    parser.add_argument("--rescore", type=int, metavar="RUN_ID", help="re-judge a finished run")
     args = parser.parse_args()
 
     settings = load_settings()
+    if args.rescore is not None:
+        rescore(args.rescore, settings)
+        for band, scores in summarise(EvalStore(settings).results(args.rescore)).items():
+            print(f"  {band}: {scores}")
+        return
+    if not args.label:
+        parser.error("--label is required unless --rescore is given")
     print(
         f"running '{args.label}' with {settings.embedding_model} / "
         f"{settings.generation_model} / judge {settings.judge_model}"

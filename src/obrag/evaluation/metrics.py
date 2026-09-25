@@ -50,9 +50,17 @@ def _judge(prompt: str, system: str, settings: Settings, client=None) -> float:
 
 
 def _sources_block(answer: Answer) -> str:
+    """Number sources the way the answer cites them: cited first, in citation order.
+
+    The generator renumbers its markers so "[1]" is the first source it cited,
+    not the first one retrieved. Numbering by retrieval order here made the
+    judge check claims against the wrong source and score correct answers 0.
+    """
+    rank = {citation: i for i, citation in enumerate(answer.citations)}
+    ordered = sorted(answer.retrieved, key=lambda item: rank.get(item.chunk.citation, len(rank)))
     return "\n\n".join(
         f"[{i}] {item.chunk.citation}\n{item.chunk.text}"
-        for i, item in enumerate(answer.retrieved, start=1)
+        for i, item in enumerate(ordered, start=1)
     )
 
 

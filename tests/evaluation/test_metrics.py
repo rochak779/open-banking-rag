@@ -116,3 +116,21 @@ def test_sources_are_given_to_the_judge_with_their_citations():
     judge = FakeJudge(1.0)
     score_retrieval_relevance("q", GROUNDED, make_settings(), client=judge)
     assert "[1] PSR 2017, regulation 100" in judge.calls[0]["input"]
+
+
+def test_judge_numbers_sources_the_way_the_answer_cites_them():
+    # The generator renumbers markers to citation order, so "[1]" in the text is
+    # the first *cited* source, not the first retrieved one. The judge must see
+    # the same numbering, or it checks each claim against the wrong source.
+    other = RetrievedChunk(
+        Chunk(id="c0", text="Unrelated provision about capital requirements.", collection="regulation",
+              citation="PSR 2017, regulation 44", source_url="https://example.invalid"),
+        0.95,
+    )
+    answer = Answer(text="SCA applies to electronic payments [1].",
+                    citations=["PSR 2017, regulation 100"], refused=False, retrieved=[other, HIT])
+    judge = FakeJudge(1.0)
+    score_groundedness(answer, make_settings(), client=judge)
+    prompt = judge.calls[0]["input"]
+    assert "[1] PSR 2017, regulation 100" in prompt
+    assert "[2] PSR 2017, regulation 44" in prompt

@@ -150,3 +150,43 @@ def test_resume_skips_questions_already_recorded_in_that_run(tmp_path, monkeypat
     assert runner.run_eval("baseline", settings, resume_run_id=run_id) == run_id
     assert asked == ["barclays rate limit?"]
     assert len(store.results(run_id)) == 2
+
+
+def test_rescore_rejudges_groundedness_against_the_cited_sources(tmp_path, monkeypatch):
+    settings = make_settings(tmp_path)
+    store = runner.EvalStore(settings)
+    run_id = store.create_run("baseline", {})
+    store.record(run_id, {"question_id": "reg-01", "band": "regulation_only", "answer": "SCA [1].",
+                          "refused": False, "citations": ["PSR 2017, regulation 100"],
+                          "groundedness": 0.0, "correctness": None})
+    store.record(run_id, {"question_id": "unans-01", "band": "unanswerable", "answer": "No.",
+                          "refused": True, "citations": [], "groundedness": 1.0, "correctness": 1.0})
+    monkeypatch.setattr(runner, "load_golden", lambda path=None: GOLDEN)
+    monkeypatch.setattr(runner, "_chunks_by_citation", lambda settings: {"PSR 2017, regulation 100": HIT.chunk})
+    seen = []
+    monkeypatch.setattr(runner, "score_groundedness",
+                        lambda a, s, client=None: seen.append(a) or 0.9)
+    monkeypatch.setattr(runner, "score_correctness", lambda a, p, s, client=None: 0.6)
+
+    runner.rescore(run_id, settings)
+
+    rows = {r["question_id"]: r for r in store.results(run_id)}
+    assert rows["reg-01"]["groundedness"] == 0.9
+    assert rows["reg-01"]["correctness"] == 0.6          # was missing, now filled
+    assert rows["unans-01"]["groundedness"] == 1.0       # refusals are not re-judged
+    assert [c.chunk.citation for c in seen[0].retrieved] == ["PSR 2017, regulation 100"]
+
+
+def test_summarise_reports_answerable_questions_separately():
+    # Refusals score groundedness and correctness 1.0 by definition, so an
+    # "overall" mean that includes the unanswerable band flatters the system.
+    rows = [
+        {"band": "spec_only", "groundedness": 0.5, "correctness": 0.4,
+         "retrieval_relevance": 0.5, "refusal_correct": 1, "routing_correct": 1},
+        {"band": "unanswerable", "groundedness": 1.0, "correctness": 1.0,
+         "retrieval_relevance": 0.0, "refusal_correct": 1, "routing_correct": None},
+    ]
+    summary = runner.summarise(rows)
+    assert summary["answerable"]["correctness"] == 0.4
+    assert summary["answerable"]["n"] == 1
+    assert summary["overall"]["correctness"] == 0.7

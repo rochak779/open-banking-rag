@@ -123,6 +123,18 @@ class EvalStore:
                 {"run_id": run_id, **row},
             )
 
+    def update(self, run_id: int, question_id: str, fields: dict) -> None:
+        """Overwrite named score fields of one result, e.g. after re-judging."""
+        unknown = set(fields) - set(RESULT_FIELDS)
+        if unknown:
+            raise ValueError(f"unknown result fields: {sorted(unknown)}")
+        assignments = ", ".join(f"{name} = :{name}" for name in fields)
+        with self._connect() as connection:
+            connection.execute(
+                f"UPDATE results SET {assignments} WHERE run_id = :run_id AND question_id = :question_id",
+                {**fields, "run_id": run_id, "question_id": question_id},
+            )
+
     def results(self, run_id: int) -> list[dict]:
         with self._connect() as connection:
             rows = connection.execute(
