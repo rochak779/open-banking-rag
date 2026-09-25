@@ -46,6 +46,10 @@ class Settings:
 
     obl_spec_tag: str = "v4.0.1-Update-1"
     top_k: int = 6
+    # Retrieval score floor. Tuned on voyage-4-lite (2026-09-25): off-topic questions
+    # topped out at 0.244, the weakest on-topic question scored 0.312. Score scales
+    # differ between embedding models, so re-tune it whenever the model changes.
+    min_score: float = 0.28
 
     raw_dir: Path = DATA / "raw"
     chroma_dir: Path = DATA / "chroma"
@@ -73,4 +77,5 @@ def load_settings() -> Settings:
         generation_model=os.environ.get("OBRAG_GENERATION_MODEL", "gemini-3.8-flash"),
         # gemini-3.1-pro-preview has no free-tier quota; .env points the judge at Gemma.
         judge_model=os.environ.get("OBRAG_JUDGE_MODEL", "gemini-3.1-pro-preview"),
+        min_score=float(os.environ.get("OBRAG_MIN_SCORE", "0.28")),
     )

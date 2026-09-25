@@ -12,7 +12,6 @@ from obrag.evaluation.metrics import (
 )
 from obrag.evaluation.storage import EvalStore, load_golden
 from obrag.query.pipeline import ask_with_route
-from obrag.query.retriever import DEFAULT_MIN_SCORE
 
 SCORE_FIELDS = ("retrieval_relevance", "groundedness", "correctness")
 
@@ -40,7 +39,7 @@ def run_eval(label: str, settings: Settings, golden_path=None) -> int:
             "generation_model": settings.generation_model,
             "judge_model": settings.judge_model,
             "top_k": settings.top_k,
-            "min_score": DEFAULT_MIN_SCORE,
+            "min_score": settings.min_score,
         },
     )
 

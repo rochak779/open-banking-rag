@@ -5,10 +5,6 @@ from obrag.index.embedder import Embedder
 from obrag.index.store import ChunkStore
 from obrag.models import Collection, RetrievedChunk
 
-# Tuned on voyage-4-lite (2026-09-25): off-topic questions topped out at 0.244,
-# the weakest on-topic question scored 0.312. Re-tune if the embedding model changes.
-DEFAULT_MIN_SCORE = 0.28
-
 
 class Retriever:
     def __init__(
@@ -16,12 +12,12 @@ class Retriever:
         settings: Settings,
         embedder=None,
         store=None,
-        min_score: float = DEFAULT_MIN_SCORE,
+        min_score: float | None = None,
     ):
         self._settings = settings
         self._embedder = embedder or Embedder(settings)
         self._store = store or ChunkStore(settings)
-        self._min_score = min_score
+        self._min_score = settings.min_score if min_score is None else min_score
 
     def retrieve(
         self, question: str, collections: list[Collection]

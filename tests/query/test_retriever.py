@@ -114,3 +114,11 @@ def test_unused_share_is_filled_from_the_other_collection():
     )
     assert len(results) == 6
     assert [r.chunk.id for r in results if r.chunk.collection == "regulation"] == ["r0"]
+
+
+def test_the_score_floor_defaults_to_the_settings_value():
+    store = FakeStore({"regulation": [RetrievedChunk(chunk("r1", "regulation"), 0.5)]})
+    results = Retriever(
+        make_settings(min_score=0.6), embedder=FakeEmbedder(), store=store
+    ).retrieve("q", ["regulation"])
+    assert results == []
