@@ -3485,6 +3485,9 @@ git push
 | Generation LLM is Claude (Anthropic API), "matches consulting positioning" | Gemini (`gemini-3.8-flash`), Anthropic dropped entirely | Rochak's call, 2026-09-18. Costs the Claude-native positioning argument; gains a free tier that removes the demo's spend risk outright. Spec updated to match. |
 | Embeddings are Voyage because it is "Anthropic's recommended partner" | Voyage retained, on its own merits | The original rationale died with the Claude swap, but `voyage-law-2` is genuinely strong on legal text and the `voyage-3` vs `voyage-law-2` comparison in Session 9 is a measured case-study result. Kept for the evidence, not the vendor story. |
 | (not addressed) | Eval judge is Gemini grading Gemini | Single-vendor was chosen over cross-family judging with the tradeoff stated. Mitigated by using a stronger model for judging than for generation, and by leading the case study with `refusal_correct` and `routing_correct`, which contain no model judgement at all. Must be declared as a limitation in Session 12. |
+| SCA-RTS is "retained in UK law" | Indexed as the retained EU text from legislation.gov.uk; stated in the disclaimer | The UK version in force is the FCA's amended SCA-RTS (e.g. article 10A from PS21/19), which this text lacks, and legislation.gov.uk marks it for revocation under FSMA 2023. Rochak's call, 2026-09-25: label now, replace with the FCA version in v2 alongside the FCA Handbook. SCA-RTS provisions are kept out of the golden set's answerable bands. Must be declared as a limitation in Session 12. |
+| Embeddings `voyage-3` | `voyage-4-lite` | Rochak asked for the cheapest model, 2026-09-25. It is also current-generation; `voyage-3` is legacy. |
+| Generation on `gemini-3.8-flash` | `gemini-3.5-flash-lite` via `OBRAG_GENERATION_MODEL` in `.env` | Free tier caps 3.8 Flash at 20 requests/day; Rochak chose to stay free (2026-09-25). The code default is unchanged. |
 
 ## Sessions at a glance
 

@@ -30,6 +30,9 @@ def test_missing_key_fails_loudly(monkeypatch):
 
 def test_disclaimer_and_snapshot_date_are_present():
     assert "not legal" in DISCLAIMER.lower()
+    # The indexed SCA-RTS predates the FCA's amendments (e.g. article 10A); users must be told.
+    assert "retained EU text" in DISCLAIMER
+    assert "FCA's later amendments" in DISCLAIMER
     assert SNAPSHOT_DATE.startswith("20")
 
 

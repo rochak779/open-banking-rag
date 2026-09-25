@@ -21,7 +21,9 @@ SNAPSHOT_DATE = "2026-09-18"
 DISCLAIMER = (
     "This tool is a technical demonstration. It is not legal, regulatory or "
     f"compliance advice. Answers are drawn from a snapshot taken {SNAPSHOT_DATE} "
-    "and may be out of date. Always check the cited source."
+    "and may be out of date. SCA-RTS citations are the retained EU text published "
+    "on legislation.gov.uk, which does not include the FCA's later amendments. "
+    "Always check the cited source."
 )
 
 
