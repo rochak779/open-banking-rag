@@ -42,7 +42,7 @@ class Settings:
 
     embedding_model: str = "voyage-3"
 
-    obl_spec_tag: str = "v4.0.0"
+    obl_spec_tag: str = "v4.0.1-Update-1"
     top_k: int = 6
 
     raw_dir: Path = DATA / "raw"
