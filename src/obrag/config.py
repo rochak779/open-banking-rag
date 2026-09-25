@@ -40,7 +40,7 @@ class Settings:
     # preview model proves unstable, fall back to "gemini-2.5-pro".
     judge_model: str = "gemini-3.1-pro-preview"
 
-    embedding_model: str = "voyage-3"
+    embedding_model: str = "voyage-4-lite"
 
     obl_spec_tag: str = "v4.0.1-Update-1"
     top_k: int = 6
@@ -65,5 +65,5 @@ def load_settings() -> Settings:
     return Settings(
         gemini_api_key=_require("GEMINI_API_KEY"),
         voyage_api_key=_require("VOYAGE_API_KEY"),
-        embedding_model=os.environ.get("OBRAG_EMBEDDING_MODEL", "voyage-3"),
+        embedding_model=os.environ.get("OBRAG_EMBEDDING_MODEL", "voyage-4-lite"),
     )
