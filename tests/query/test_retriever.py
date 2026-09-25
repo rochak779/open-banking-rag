@@ -87,3 +87,30 @@ def test_no_results_is_an_empty_list_not_an_error():
         "q", ["regulation", "spec"]
     )
     assert results == []
+
+
+def test_each_routed_collection_gets_a_fair_share_of_slots():
+    # Spec chunks share a lot of boilerplate and score in a tight band, so a
+    # plain merge let them take 5 of 6 slots on a mixed question and the
+    # generator never saw the law it needed.
+    store = FakeStore({
+        "regulation": [RetrievedChunk(chunk(f"r{i}", "regulation"), 0.50 - i / 100) for i in range(6)],
+        "spec": [RetrievedChunk(chunk(f"s{i}", "spec"), 0.60 - i / 100) for i in range(6)],
+    })
+    results = Retriever(make_settings(top_k=6), embedder=FakeEmbedder(), store=store).retrieve(
+        "q", ["regulation", "spec"]
+    )
+    assert sorted(r.chunk.collection for r in results) == ["regulation"] * 3 + ["spec"] * 3
+    assert [r.score for r in results] == sorted((r.score for r in results), reverse=True)
+
+
+def test_unused_share_is_filled_from_the_other_collection():
+    store = FakeStore({
+        "regulation": [RetrievedChunk(chunk("r0", "regulation"), 0.5)],
+        "spec": [RetrievedChunk(chunk(f"s{i}", "spec"), 0.60 - i / 100) for i in range(6)],
+    })
+    results = Retriever(make_settings(top_k=6), embedder=FakeEmbedder(), store=store).retrieve(
+        "q", ["regulation", "spec"]
+    )
+    assert len(results) == 6
+    assert [r.chunk.id for r in results if r.chunk.collection == "regulation"] == ["r0"]

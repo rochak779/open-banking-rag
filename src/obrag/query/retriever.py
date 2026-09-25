@@ -29,10 +29,21 @@ class Retriever:
         embedding = self._embedder.embed_query(question)
         top_k = self._settings.top_k
 
-        merged: list[RetrievedChunk] = []
-        for name in collections:
-            merged.extend(self._store.query(name, embedding, top_k=top_k))
+        per_collection = [
+            [r for r in self._store.query(name, embedding, top_k=top_k) if r.score >= self._min_score]
+            for name in collections
+        ]
 
-        kept = [r for r in merged if r.score >= self._min_score]
-        kept.sort(key=lambda r: r.score, reverse=True)
-        return kept[:top_k]
+        # Each routed collection is guaranteed an equal share of the slots; a
+        # plain merge by score let the spec's near-identical endpoint chunks
+        # crowd the law out of mixed questions. Unused share goes to the best
+        # of the rest.
+        share = -(-top_k // max(len(collections), 1))  # ceiling division
+        chosen = [r for results in per_collection for r in results[:share]]
+        rest = [r for results in per_collection for r in results[share:]]
+        rest.sort(key=lambda r: r.score, reverse=True)
+        chosen.sort(key=lambda r: r.score, reverse=True)
+        chosen = chosen[:top_k] + rest[: max(top_k - len(chosen), 0)]
+
+        chosen.sort(key=lambda r: r.score, reverse=True)
+        return chosen
