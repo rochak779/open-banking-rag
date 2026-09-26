@@ -13,10 +13,14 @@ from obrag.evaluation.storage import EvalStore
 from obrag.models import Answer
 from obrag.query.pipeline import ask
 
+# Chosen from the golden-set runs: each answered (or, for the last, refused)
+# correctly with full marks, so the pre-cached answers are the system at its best
+# on each band. The original headline SCA question is declined (see the case study).
 EXAMPLES = [
-    "Does the Payment Initiation API's consent flow satisfy SCA requirements?",
-    "When must strong customer authentication be applied?",
-    "What does POST /domestic-payment-consents return on success?",
+    "What must a funds confirmation for a card-based payment contain under the PSRs, "
+    "and how does the Confirmation of Funds API return it?",
+    "How much can a payer be made to pay for an unauthorised payment made with a lost or stolen card?",
+    "What happens if a PISP sends the same x-idempotency-key twice when creating a domestic payment?",
     "What is Barclays' rate limit on the accounts endpoint?",
 ]
 

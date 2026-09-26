@@ -1,7 +1,5 @@
 # Grounded Q&A over UK Open Banking: law and API spec in one answer
 
-> **Draft.** The results section is waiting for the baseline and `voyage-law-2` eval runs. Every number elsewhere comes from a measurement taken while building the system; the source is noted next to each.
-
 ## The problem
 
 Building on UK Open Banking means reading two very different bodies of text side by side: the law (the Payment Services Regulations 2017 and the SCA-RTS) and the Open Banking Limited Read/Write API specification. The useful questions sit across both: *does the payment consent flow satisfy strong customer authentication?* The answer has to cite the regulation and the endpoint, and it has to say "I don't know" when the sources don't cover the question. In a compliance-adjacent tool, a confident answer with the wrong citation is worse than no answer.
@@ -36,7 +34,43 @@ The judge is Gemma 4 31B, a different model family from the Gemini generator. Be
 
 ## Results
 
-<!-- RESULTS PENDING: fill from `summarise()` output for run 1 (baseline, voyage-4-lite) and run 2 (voyage-law-2). Lead with refusal accuracy on the unanswerable band, then routing, then the judged scores per band, then the embedding A/B. Every number must trace to a row in data/eval.db. -->
+Three runs over the same 40 questions, all with `gemini-3.5-flash-lite` generating and Gemma 4 31B judging. Every number below comes from `summarise()` over `data/eval.db`.
+
+**It declines what it cannot answer: 10 of 10 unanswerable questions were refused in every run.** That includes the trap question about the FCA's article 10A. A related but wrong article (article 10) is retrievable, and the system still declined rather than answering from it.
+
+### Before and after: fixing the router
+
+Run 1 is the baseline. Run 3 changes one thing: keyword rules may only widen a search to both collections, never narrow it to one.
+
+| Band | Routing correct | Refusal decision correct | Retrieval relevance | Groundedness | Correctness |
+|---|---|---|---|---|---|
+| Regulation-only (10) | 8 → 9 | 9 → 9 | 0.67 → 0.52 | 0.80 → 1.00 | 0.82 → 0.80 |
+| Spec-only (10) | 9 → 9 | 8 → 8 | 0.60 → 0.60 | 0.99 → 1.00 | 0.60 → 0.57 |
+| Cross-cutting (10) | **4 → 8** | 3 → 4 | 0.39 → 0.53 | 1.00 → 1.00 | 0.13 → 0.23 |
+| **All answerable (30)** | **21 → 26** | 20 → 21 | 0.55 → 0.55 | 0.93 → 1.00 | 0.52 → 0.54 |
+
+- **Routing is the measured win.** In the baseline, the keyword shortcut routed 4 of 9 questions correctly against 17 of 21 for the model router, and caused 5 of the 6 cross-cutting misses: "under the PSRs … which API endpoints?" matched a regulation keyword and never searched the spec. With keywords only allowed to widen the search, cross-cutting routing went from 4/10 to 8/10.
+- **Cross-cutting answers are still the weak spot.** Better routing turned one refusal into a full answer (cross-03, correctness 0 → 1.0, citing PSR regulation 68 and `POST /funds-confirmations` side by side). But three other questions are now routed correctly and still declined. The generator only answers when a source links the two sides explicitly, and it refuses otherwise. That is the next change to measure, not something the routing fix could reach.
+- **Read the small differences as noise.** Each band is 10 questions, so one question moves a band score by 0.1, and run-to-run variance was not measured. The regulation-only relevance drop (0.67 → 0.52) came with identical refusal decisions and one more correct route; it is not evidence of a regression.
+- **Groundedness is near 1.0 almost everywhere.** The generator is told to use only the numbered sources, and it mostly does. One defect found by reading, not by the metric: cross-09 was answered with no citation markers at all, which the groundedness judge does not penalise.
+
+### Embedding comparison: the legal model lost
+
+Same pipeline, different embeddings (run 1 against run 2, answerable questions):
+
+| | `voyage-4-lite` | `voyage-law-2` |
+|---|---|---|
+| Retrieval relevance | **0.55** | 0.41 |
+| Groundedness | 0.93 | 0.99 |
+| Correctness | 0.52 | 0.51 |
+| Refusal decision correct | 20/30 | 20/30 |
+| Price per token | 1× | 6× |
+
+The legal-domain model retrieved worse sources (0.41 against 0.55, and 0.31 against 0.60 on spec-only questions: the API spec is not legal text) for the same correctness, at six times the price. Its higher groundedness is real, but the judge only checks answers against the sources they cite, so it cannot show whether better sources existed. `voyage-4-lite` stays.
+
+### Scores that could not be measured
+
+A judge call failing (Gemma server errors or its 16K tokens-per-minute limit) leaves a gap rather than a guess: 4, 7 and 2 missing scores in runs 1, 2 and 3, out of 120 judged values per run. Groundedness in runs 1 and 2 was re-judged after a bug where the judge numbered sources differently from the answer's citations. That bug scored a verbatim, correctly cited definition 0.0.
 
 ## What did not work, and what changed
 
@@ -63,3 +97,5 @@ Each of these was found by measuring, not by reasoning about the design:
 - The FCA Handbook and the FCA's current SCA-RTS, replacing the retained EU text.
 - Schema-field chunks for the API spec.
 - Hybrid (keyword + vector) retrieval, aimed at the abbreviation gap the golden set measures.
+- A generator prompt that bridges a regulation and an endpoint when both are retrieved but no source states the link, measured on the cross-cutting band.
+- A run-to-run variance measurement, so small score differences can be read with confidence.
