@@ -16,7 +16,7 @@ The standard recipe (split text into fixed windows, embed, retrieve, generate) b
 
 ## Architecture
 
-See [architecture.md](architecture.md). In short: two collections (regulation, spec), a router that uses keyword rules and falls back to a small model, a similarity floor that lets off-topic questions reach zero results, an equal share of the top 6 for each routed collection, and a generator that must cite numbered sources or reply `INSUFFICIENT_CONTEXT`. No RAG framework: each stage is a short, tested Python module.
+See [architecture.md](architecture.md). In short: two collections (regulation, spec), a small-model router whose keyword rules can only widen a search to both collections, a similarity floor that lets off-topic questions reach zero results, an equal share of the top 6 for each routed collection, and a generator that must cite numbered sources or reply `INSUFFICIENT_CONTEXT`. No RAG framework: each stage is a short, tested Python module.
 
 ## How it was evaluated
 

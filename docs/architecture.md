@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    Q[Question] --> R{Router<br/>keyword rules first,<br/>then gemini-3.5-flash-lite}
+    Q[Question] --> R{Router<br/>keywords from both sides: both,<br/>otherwise gemini-3.5-flash-lite}
     R -->|regulation| RC[(Regulation collection<br/>PSR 2017 + SCA-RTS<br/>300 chunks)]
     R -->|spec| SC[(Spec collection<br/>OBL Read/Write API v4.0.1<br/>89 chunks)]
     R -->|both| RC
@@ -40,7 +40,7 @@ Both sources are already structured: OpenAPI operations and CLML provisions. A g
 | Role | Model | Why |
 |---|---|---|
 | Embeddings | `voyage-4-lite` | cheapest current-generation Voyage model; `voyage-law-2` A/B in the case study |
-| Router | `gemini-3.5-flash-lite` | one-word output; skipped entirely when keyword rules decide |
+| Router | `gemini-3.5-flash-lite` | one-word output; skipped only when keywords from both sides send a question to both collections |
 | Generation | `gemini-3.5-flash-lite` | free tier allows 500 requests/day; `gemini-3.8-flash` (the code default) allows 20 |
 | Eval judge | `gemma-4-31b-it` | free, and a different model family from the generator; `gemini-3.1-pro-preview` has no free quota |
 
