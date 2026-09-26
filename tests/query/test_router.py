@@ -19,18 +19,33 @@ class FakeGemini:
         return type("I", (), {"output_text": self._reply})()
 
 
-def test_endpoint_keywords_route_to_spec_without_an_api_call():
-    fake = FakeGemini("both")
-    assert route("What does POST /domestic-payments return?", make_settings(), client=fake) == ["spec"]
+def test_keywords_from_both_sides_route_to_both_without_an_api_call():
+    fake = FakeGemini("spec")
+    assert route(
+        "Under the PSRs, what does POST /domestic-payments need?", make_settings(), client=fake
+    ) == ["regulation", "spec"]
     assert fake.calls == []
 
 
-def test_regulation_keywords_route_to_regulation_without_an_api_call():
+def test_one_sided_keywords_do_not_narrow_the_route_on_their_own():
+    # Baseline eval: the keyword shortcut routed 4/9 golden questions correctly
+    # against 17/21 for the model, and caused 5 of the 6 cross-cutting misses
+    # ("under the PSRs ... which API endpoints?" went to regulation only).
     fake = FakeGemini("both")
+    assert route(
+        "The PSRs say an ASPSP must give a PISP information. Which API endpoints provide it?",
+        make_settings(), client=fake,
+    ) == ["regulation", "spec"]
+    assert len(fake.calls) == 1
+
+
+def test_the_model_can_still_route_a_keyword_question_to_one_collection():
+    fake = FakeGemini("spec")
+    assert route("What does POST /domestic-payments return?", make_settings(), client=fake) == ["spec"]
+    fake = FakeGemini("regulation")
     assert route("What does regulation 68 of the PSRs require?", make_settings(), client=fake) == [
         "regulation"
     ]
-    assert fake.calls == []
 
 
 def test_ambiguous_question_asks_the_model():

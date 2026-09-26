@@ -1,8 +1,15 @@
 """Decide which collections a question needs.
 
-Cheap keyword rules first, one flash-lite call for the rest. Every uncertain path
-resolves to both collections: over-retrieving costs a fraction of a penny,
-under-retrieving produces a confident answer with the wrong half of the story.
+Keyword rules can only widen the route: a question with markers from both sides
+goes to both collections without a model call. Everything else goes to one
+flash-lite call. Every uncertain path resolves to both collections:
+over-retrieving costs a fraction of a penny, under-retrieving produces a
+confident answer with the wrong half of the story.
+
+Keywords used to narrow the route too, sending "under the PSRs ... which API
+endpoints?" to regulation only. On the baseline golden-set run the keyword
+shortcut routed 4 of 9 questions correctly against 17 of 21 for the model, and
+caused 5 of the 6 cross-cutting routing misses.
 """
 
 import re
@@ -55,13 +62,7 @@ def _matches(patterns: tuple[str, ...], question: str) -> bool:
 
 
 def route(question: str, settings: Settings, client=None) -> list[Collection]:
-    is_spec = _matches(SPEC_PATTERNS, question)
-    is_regulation = _matches(REGULATION_PATTERNS, question)
-    if is_spec and not is_regulation:
-        return ["spec"]
-    if is_regulation and not is_spec:
-        return ["regulation"]
-    if is_spec and is_regulation:
+    if _matches(SPEC_PATTERNS, question) and _matches(REGULATION_PATTERNS, question):
         return BOTH
 
     try:
