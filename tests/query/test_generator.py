@@ -149,3 +149,13 @@ def test_an_answer_with_no_citation_markers_is_declined():
 def test_an_answer_citing_only_nonexistent_sources_is_declined():
     fake = FakeGemini("Claim [7].")
     assert generate("q", HITS, make_settings(), client=fake).refused is True
+
+
+def test_the_prompt_allows_bridging_a_regulation_and_an_endpoint():
+    # Baseline: cross-cutting questions with both sides retrieved were refused
+    # because no single source states the link between law and API.
+    fake = FakeGemini("Read together, [1] and [2].")
+    generate("q", HITS, make_settings(), client=fake)
+    system = fake.calls[0]["system_instruction"]
+    assert "Read together" in system
+    assert "Never use prior knowledge" in system
