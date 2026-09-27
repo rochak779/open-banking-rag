@@ -2,7 +2,7 @@
 
 Ask questions about UK Open Banking and get answers grounded in the law (Payment Services Regulations 2017, SCA-RTS) and the Open Banking Read/Write API specification. Every claim is cited with a deep link to the source provision or endpoint, and the system says so when the sources don't cover the question.
 
-**Live demo:** _link coming after deploy_
+**Live demo:** https://openbanking.streamlit.app/ (free hosting: the first visit after a quiet spell can take a minute to wake up)
 
 > This tool is a technical demonstration. It is not legal, regulatory or compliance advice. Answers are drawn from a snapshot taken 2026-09-18 and may be out of date. SCA-RTS citations are the retained EU text published on legislation.gov.uk, which does not include the FCA's later amendments. Always check the cited source.
 
