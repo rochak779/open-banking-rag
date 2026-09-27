@@ -9,9 +9,9 @@ special-casing.
 
 import re
 
-from google import genai
 
 from obrag.config import Settings
+from obrag.gemini import client_for
 from obrag.models import Answer, RetrievedChunk
 
 REFUSAL_SENTINEL = "INSUFFICIENT_CONTEXT"
@@ -20,6 +20,12 @@ NO_CONTEXT_TEXT = (
     "I don't have anything in the indexed sources that answers this. The index "
     "covers the Payment Services Regulations 2017, the retained SCA-RTS, and the "
     "Open Banking Read/Write API specification."
+)
+
+UNCITED_TEXT = (
+    "I found relevant sources but could not produce an answer that cites them, so "
+    "I'm not showing one. The retrieved sources are listed below if you want to read "
+    "them directly."
 )
 
 API_FAILURE_TEXT = (
@@ -85,7 +91,7 @@ def generate(
     prompt = f"Sources:\n\n{_format_sources(retrieved)}\n\nQuestion: {question}"
 
     try:
-        client = client or genai.Client(api_key=settings.gemini_api_key)
+        client = client or client_for(settings)
         interaction = client.interactions.create(
             model=settings.generation_model,
             system_instruction=SYSTEM,
@@ -102,5 +108,9 @@ def generate(
         return Answer(text=reason or NO_CONTEXT_TEXT, citations=[], refused=True, retrieved=retrieved)
 
     text, indices = _renumber_markers(text, len(retrieved))
+    if not indices:
+        # A fluent answer with nothing to check it against is the failure this
+        # tool exists to prevent (seen as cross-09 in the golden-set run).
+        return Answer(text=UNCITED_TEXT, citations=[], refused=True, retrieved=retrieved)
     citations = [retrieved[i - 1].chunk.citation for i in indices]
     return Answer(text=text, citations=citations, refused=False, retrieved=retrieved)
