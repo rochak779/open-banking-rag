@@ -14,9 +14,9 @@ caused 5 of the 6 cross-cutting routing misses.
 
 import re
 
-from google import genai
 
 from obrag.config import Settings
+from obrag.gemini import client_for
 from obrag.models import Collection
 
 BOTH: list[Collection] = ["regulation", "spec"]
@@ -66,7 +66,7 @@ def route(question: str, settings: Settings, client=None) -> list[Collection]:
         return BOTH
 
     try:
-        client = client or genai.Client(api_key=settings.gemini_api_key)
+        client = client or client_for(settings)
         interaction = client.interactions.create(
             model=settings.router_model,
             system_instruction=SYSTEM,

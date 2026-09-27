@@ -50,6 +50,9 @@ class Settings:
     # topped out at 0.244, the weakest on-topic question scored 0.312. Score scales
     # differ between embedding models, so re-tune it whenever the model changes.
     min_score: float = 0.28
+    # Gemini retries per call; None keeps the SDK's default. The demo app sets 0 so a
+    # visitor on an exhausted quota gets an answer or an error in seconds.
+    gemini_retries: int | None = None
 
     raw_dir: Path = DATA / "raw"
     chroma_dir: Path = DATA / "chroma"

@@ -13,10 +13,10 @@ so. score_refusal, the metric that matters most, has no model in it at all.
 
 import re
 
-from google import genai
 from pydantic import BaseModel, Field
 
 from obrag.config import Settings
+from obrag.gemini import client_for
 from obrag.models import Answer
 
 
@@ -35,7 +35,7 @@ def _parse_judgement(text: str) -> Judgement:
 
 
 def _judge(prompt: str, system: str, settings: Settings, client=None) -> float:
-    client = client or genai.Client(api_key=settings.gemini_api_key)
+    client = client or client_for(settings)
     interaction = client.interactions.create(
         model=settings.judge_model,
         system_instruction=system,

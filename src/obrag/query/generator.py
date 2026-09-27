@@ -9,9 +9,9 @@ special-casing.
 
 import re
 
-from google import genai
 
 from obrag.config import Settings
+from obrag.gemini import client_for
 from obrag.models import Answer, RetrievedChunk
 
 REFUSAL_SENTINEL = "INSUFFICIENT_CONTEXT"
@@ -20,6 +20,12 @@ NO_CONTEXT_TEXT = (
     "I don't have anything in the indexed sources that answers this. The index "
     "covers the Payment Services Regulations 2017, the retained SCA-RTS, and the "
     "Open Banking Read/Write API specification."
+)
+
+UNCITED_TEXT = (
+    "I found relevant sources but could not produce an answer that cites them, so "
+    "I'm not showing one. The retrieved sources are listed below if you want to read "
+    "them directly."
 )
 
 API_FAILURE_TEXT = (
@@ -32,7 +38,7 @@ SYSTEM = f"""You answer questions about UK Open Banking using only the numbered 
 Rules:
 - Use only the supplied sources. Never use prior knowledge about UK payments law or the Open Banking spec, even if you are confident it is correct.
 - Cite with the bracketed number of every source you rely on, inline, like [1] or [2]. Every factual claim needs a marker.
-- Where a regulation and the API specification both bear on the question, explain how they relate rather than listing them separately.
+- Where a regulation and the API specification both bear on the question, explain how they relate rather than listing them separately. A source rarely states the link outright: when the sources cover the legal requirement and the relevant endpoint, state what each says, with its marker, and present the connection as your reading of the two (for example "Read together, ..."). This is not prior knowledge; it is combining the sources you were given.
 - If the sources do not contain enough to answer, reply with exactly "{REFUSAL_SENTINEL}: " followed by one sentence naming what is missing. Do not guess, and do not answer partially from memory.
 - Be concise and concrete. No preamble, no restating the question."""
 
@@ -85,7 +91,7 @@ def generate(
     prompt = f"Sources:\n\n{_format_sources(retrieved)}\n\nQuestion: {question}"
 
     try:
-        client = client or genai.Client(api_key=settings.gemini_api_key)
+        client = client or client_for(settings)
         interaction = client.interactions.create(
             model=settings.generation_model,
             system_instruction=SYSTEM,
@@ -102,5 +108,9 @@ def generate(
         return Answer(text=reason or NO_CONTEXT_TEXT, citations=[], refused=True, retrieved=retrieved)
 
     text, indices = _renumber_markers(text, len(retrieved))
+    if not indices:
+        # A fluent answer with nothing to check it against is the failure this
+        # tool exists to prevent (seen as cross-09 in the golden-set run).
+        return Answer(text=UNCITED_TEXT, citations=[], refused=True, retrieved=retrieved)
     citations = [retrieved[i - 1].chunk.citation for i in indices]
     return Answer(text=text, citations=citations, refused=False, retrieved=retrieved)

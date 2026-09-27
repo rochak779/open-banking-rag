@@ -133,3 +133,29 @@ def test_api_failure_refuses_rather_than_raising():
 def test_retrieved_chunks_are_carried_through_for_the_ui():
     fake = FakeGemini("Answer [1].")
     assert generate("q", HITS, make_settings(), client=fake).retrieved == HITS
+
+
+def test_an_answer_with_no_citation_markers_is_declined():
+    # Seen in the golden-set run (cross-09): a fluent answer with no markers at
+    # all was shown as a normal answer with an empty source list.
+    fake = FakeGemini("An AISP must not access other accounts and must get explicit consent.")
+    answer = generate("q", HITS, make_settings(), client=fake)
+    assert answer.refused is True
+    assert answer.citations == []
+    assert "cite" in answer.text.lower()
+    assert answer.retrieved == HITS  # still inspectable in the UI
+
+
+def test_an_answer_citing_only_nonexistent_sources_is_declined():
+    fake = FakeGemini("Claim [7].")
+    assert generate("q", HITS, make_settings(), client=fake).refused is True
+
+
+def test_the_prompt_allows_bridging_a_regulation_and_an_endpoint():
+    # Baseline: cross-cutting questions with both sides retrieved were refused
+    # because no single source states the link between law and API.
+    fake = FakeGemini("Read together, [1] and [2].")
+    generate("q", HITS, make_settings(), client=fake)
+    system = fake.calls[0]["system_instruction"]
+    assert "Read together" in system
+    assert "Never use prior knowledge" in system

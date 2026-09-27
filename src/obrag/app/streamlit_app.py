@@ -4,6 +4,8 @@ Display decisions live in format_answer, summary_rows and obrag.app.limits so th
 be tested without launching a browser; everything below them is layout.
 """
 
+from dataclasses import replace
+
 import streamlit as st
 
 from obrag.app.limits import QueryBudget, cache_answer, cached_answer, resolve_answer
@@ -106,7 +108,9 @@ def main() -> None:
     st.title("UK Open Banking RAG")
     st.warning(DISCLAIMER)
 
-    settings = load_settings()
+    # No Gemini retries: a visitor on an exhausted free-tier quota should see the
+    # "unavailable" message in seconds, not after the SDK waits out 429s.
+    settings = replace(load_settings(), gemini_retries=0)
     # The example cache is module-level, so it is shared by every session in this
     # process: a cold start costs one ask() per example, not every visitor.
     if "obrag_examples_cached" not in st.session_state:
