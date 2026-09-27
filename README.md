@@ -14,11 +14,11 @@ Measured on a 40-question golden set (four bands of 10), written from the source
 |---|---|
 | Unanswerable questions correctly declined | **10/10** in every run, including a trap question with a related but wrong article retrievable |
 | Routing to the right source(s), answerable questions | 21/30 → **26/30** after fixing the router (cross-cutting: 4/10 → 8/10) |
-| Correct answer-or-decline decision, answerable questions | 21/30 |
-| Groundedness / correctness (LLM-judged, relative) | 1.00 / 0.54 |
+| Correct answer-or-decline decision, answerable questions | 21/30 (cross-cutting 5/10) |
+| Groundedness / correctness (LLM-judged, relative) | 0.99 / 0.53 |
 | Embedding A/B | `voyage-4-lite` beat the legal-domain `voyage-law-2` on retrieval relevance (0.55 vs 0.41) at equal correctness and a sixth of the price |
 
-The weak spot is stated, not hidden: questions that bridge a regulation and an endpoint are still often declined (4/10 correct decisions). The case study explains why and what would come next.
+The weak spot is stated, not hidden: questions that bridge a regulation and an endpoint are still often declined (5/10 correct decisions). The case study explains why and what would come next.
 
 ## Quickstart
 

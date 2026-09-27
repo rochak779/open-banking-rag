@@ -34,7 +34,7 @@ The judge is Gemma 4 31B, a different model family from the Gemini generator. Be
 
 ## Results
 
-Three runs over the same 40 questions, all with `gemini-3.5-flash-lite` generating and Gemma 4 31B judging. Every number below comes from `summarise()` over `data/eval.db`.
+Four runs over the same 40 questions, all with `gemini-3.5-flash-lite` generating and Gemma 4 31B judging. Every number below comes from `summarise()` over `data/eval.db`.
 
 **It declines what it cannot answer: 10 of 10 unanswerable questions were refused in every run.** That includes the trap question about the FCA's article 10A. A related but wrong article (article 10) is retrievable, and the system still declined rather than answering from it.
 
@@ -54,6 +54,22 @@ Run 1 is the baseline. Run 3 changes one thing: keyword rules may only widen a s
 - **Read the small differences as noise.** Each band is 10 questions, so one question moves a band score by 0.1, and run-to-run variance was not measured. The regulation-only relevance drop (0.67 → 0.52) came with identical refusal decisions and one more correct route; it is not evidence of a regression.
 - **Groundedness is near 1.0 almost everywhere.** The generator is told to use only the numbered sources, and it mostly does. One defect found by reading, not by the metric: cross-09 was answered with no citation markers at all, which the groundedness judge does not penalise. Since fixed: an answer with no valid citations is now declined, with the retrieved sources still shown.
 
+### Letting the generator bridge law and API
+
+Run 4 adds two changes on top of run 3. The generator prompt now allows connecting a regulation and an endpoint as a reading of the two sources, each claim still cited. And an answer with no valid citations is declined instead of shown.
+
+| Band | Refusal decision correct (run 3 → 4) | Correctness (run 3 → 4) |
+|---|---|---|
+| Cross-cutting (10) | 4 → **5** | 0.23 → **0.37** |
+| Regulation-only (10) | 9 → 8 | 0.80 → 0.68 |
+| Spec-only (10) | 8 → 8 | 0.57 → 0.54 |
+| All answerable (30) | 21 → 21 | 0.54 → 0.53 |
+| Unanswerable (10) | 10 → **10** | – |
+
+A trade, not a clean win. The band it was aimed at improved: cross-06 is now answered, and cross-10 went from 0.33 to 1.0. But the bridging instruction also reached law-only questions: reg-02 "read together" two regulations, pulled in the wrong one, and dropped from 1.0 to 0.25. The uncited-answer rule declined reg-01 once, when the model answered without markers. That costs a correct answer, but an answer nobody can check should not be shown. Overall correctness is flat.
+
+The remaining cross-cutting refusals are not a prompt problem. cross-01 and cross-04 are the abbreviation gap ("SCA", "VRP"). cross-07 and cross-08 never retrieve regulation 69, the provision that answers them. The next measured change would apply the bridging instruction only when the retrieved sources include both law and API chunks, which should keep the cross-cutting gain without the reg-02 leak.
+
 ### Embedding comparison: the legal model lost
 
 Same pipeline, different embeddings (run 1 against run 2, answerable questions):
@@ -70,7 +86,7 @@ The legal-domain model retrieved worse sources (0.41 against 0.55, and 0.31 agai
 
 ### Scores that could not be measured
 
-A judge call failing (Gemma server errors or its 16K tokens-per-minute limit) leaves a gap rather than a guess: 4, 7 and 2 missing scores in runs 1, 2 and 3, out of 120 judged values per run. Groundedness in runs 1 and 2 was re-judged after a bug where the judge numbered sources differently from the answer's citations. That bug scored a verbatim, correctly cited definition 0.0.
+A judge call failing (Gemma server errors or its 16K tokens-per-minute limit) leaves a gap rather than a guess: 4, 7, 2 and 2 missing scores in runs 1 to 4, out of 120 judged values per run. Groundedness in runs 1 and 2 was re-judged after a bug where the judge numbered sources differently from the answer's citations. That bug scored a verbatim, correctly cited definition 0.0.
 
 ## What did not work, and what changed
 
@@ -97,5 +113,5 @@ Each of these was found by measuring, not by reasoning about the design:
 - The FCA Handbook and the FCA's current SCA-RTS, replacing the retained EU text.
 - Schema-field chunks for the API spec.
 - Hybrid (keyword + vector) retrieval, aimed at the abbreviation gap the golden set measures.
-- A generator prompt that bridges a regulation and an endpoint when both are retrieved but no source states the link, measured on the cross-cutting band.
+- The bridging instruction applied only when both law and API sources are retrieved (run 4 showed it leaking into law-only questions).
 - A run-to-run variance measurement, so small score differences can be read with confidence.
