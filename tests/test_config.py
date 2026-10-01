@@ -18,7 +18,7 @@ def test_model_ids_are_exact(monkeypatch):
     monkeypatch.delenv("OBRAG_JUDGE_MODEL", raising=False)
     s = load_settings()
     assert s.generation_model == "gemini-3.8-flash"
-    assert s.router_model == "gemini-3.5-flash-lite"
+    assert s.router_model == "gemini-3.1-flash-lite"
     assert s.judge_model == "gemini-3.1-pro-preview"
 
 
