@@ -26,7 +26,8 @@ EXAMPLES = [
     "What is Barclays' rate limit on the accounts endpoint?",
 ]
 
-# Two model calls per question against a 500/day free quota shared by all visitors.
+# One router and one generator call per question, each against its own 500/day
+# free quota shared by all visitors.
 MAX_QUERIES_PER_SESSION = 10
 
 

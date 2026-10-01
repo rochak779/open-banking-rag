@@ -36,7 +36,12 @@ class Settings:
     # the right call here: synthesis over supplied context is not a hard reasoning
     # task, and the cheap tier keeps a public demo inside the free rate limits.
     generation_model: str = "gemini-3.8-flash"
-    router_model: str = "gemini-3.5-flash-lite"
+    # A separate free-tier pool from generation: on 2026-09-27, back-to-back calls to
+    # gemini-3.5-flash-lite (router then generator) stalled about every other request
+    # for 40-60s; gemini-3.1-flash-lite answered in 2.6-6s.
+    router_model: str = "gemini-3.1-flash-lite"
+    # Seconds before a router call gives up and the question goes to both collections.
+    router_timeout_seconds: float = 8.0
     # Deliberately a stronger model than the generator. It does not solve the
     # self-judging problem — same vendor, same family — but it blunts it. If the
     # preview model proves unstable, fall back to "gemini-2.5-pro".

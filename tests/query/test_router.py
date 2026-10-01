@@ -1,3 +1,6 @@
+import time
+from dataclasses import replace
+
 from obrag.config import Settings
 from obrag.query.router import route
 
@@ -60,7 +63,25 @@ def test_ambiguous_question_asks_the_model():
 def test_router_uses_the_cheap_model():
     fake = FakeGemini("spec")
     route("Does the consent flow satisfy SCA?", make_settings(), client=fake)
-    assert fake.calls[0]["model"] == "gemini-3.5-flash-lite"
+    assert fake.calls[0]["model"] == "gemini-3.1-flash-lite"
+
+
+def test_a_stalled_router_call_falls_back_to_both_at_the_deadline():
+    # gemini-3.5-flash-lite held about every other free-tier request for 40-60s
+    # (2026-09-27), and the SDK's own timeout let a 36s call through. The deadline
+    # is wall-clock, so a stall costs the visitor at most router_timeout_seconds.
+    class Stalling(FakeGemini):
+        def create(self, **kwargs):
+            time.sleep(2)
+            return super().create(**kwargs)
+
+    settings = replace(make_settings(), router_timeout_seconds=0.1)
+    start = time.perf_counter()
+    assert route("Does the consent flow satisfy SCA?", settings, client=Stalling("spec")) == [
+        "regulation",
+        "spec",
+    ]
+    assert time.perf_counter() - start < 1
 
 
 def test_single_word_reply_is_tolerant_of_case_and_punctuation():
