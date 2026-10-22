@@ -42,6 +42,10 @@ class Settings:
     router_model: str = "gemini-3.1-flash-lite"
     # Seconds before a router call gives up and the question goes to both collections.
     router_timeout_seconds: float = 8.0
+    # Off since 2026-10-22: gemini-3.1-flash-lite took 95s per call and hit the
+    # deadline every time, so the router added 8s to each question and still sent it
+    # to both collections. Eval runs 1-4 had it on.
+    use_router: bool = False
     # Deliberately a stronger model than the generator. It does not solve the
     # self-judging problem — same vendor, same family — but it blunts it. If the
     # preview model proves unstable, fall back to "gemini-2.5-pro".

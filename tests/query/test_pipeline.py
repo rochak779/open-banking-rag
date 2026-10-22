@@ -1,10 +1,31 @@
+from dataclasses import replace
+
 from obrag.config import Settings
 from obrag.models import Answer, Chunk, RetrievedChunk
 from obrag.query import pipeline
 
 
-def make_settings():
-    return Settings(gemini_api_key="ai-x", voyage_api_key="pa-x")
+def make_settings(use_router=True):
+    return replace(Settings(gemini_api_key="ai-x", voyage_api_key="pa-x"), use_router=use_router)
+
+
+def test_by_default_every_question_searches_both_collections_without_a_router_call(monkeypatch):
+    def no_router(q, s, client=None):
+        raise AssertionError("the router should not be called")
+
+    monkeypatch.setattr(pipeline, "route", no_router)
+
+    class EmptyRetriever:
+        def __init__(self, settings):
+            pass
+
+        def retrieve(self, question, collections):
+            return []
+
+    monkeypatch.setattr(pipeline, "Retriever", EmptyRetriever)
+    default = Settings(gemini_api_key="ai-x", voyage_api_key="pa-x")
+    collections, _ = pipeline.ask_with_route("q", settings=default)
+    assert collections == ["regulation", "spec"]
 
 
 def test_ask_wires_router_retriever_and_generator_in_order(monkeypatch):

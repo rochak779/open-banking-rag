@@ -8,7 +8,7 @@ from obrag.config import Settings, load_settings
 from obrag.models import Answer, Collection
 from obrag.query.generator import generate
 from obrag.query.retriever import Retriever
-from obrag.query.router import route
+from obrag.query.router import BOTH, route
 
 
 def ask_with_route(
@@ -20,7 +20,7 @@ def ask_with_route(
     produced the answer rather than a second router call that may differ.
     """
     settings = settings or load_settings()
-    collections = route(question, settings)
+    collections = route(question, settings) if settings.use_router else BOTH
     retriever = Retriever(settings)
     retrieved = retriever.retrieve(question, collections)
     return collections, generate(question, retrieved, settings)
