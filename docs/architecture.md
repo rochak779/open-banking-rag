@@ -2,12 +2,9 @@
 
 ```mermaid
 flowchart TD
-    Q[Question] --> R{Router<br/>keywords from both sides: both,<br/>otherwise gemini-3.1-flash-lite}
-    R -->|regulation| RC[(Regulation collection<br/>PSR 2017 + SCA-RTS<br/>300 chunks)]
-    R -->|spec| SC[(Spec collection<br/>OBL Read/Write API v4.0.1<br/>89 chunks)]
-    R -->|both| RC
-    R -->|both| SC
-    RC --> M[Score floor 0.28,<br/>equal share of top-6 per routed collection]
+    Q[Question] --> RC[(Regulation collection<br/>PSR 2017 + SCA-RTS<br/>300 chunks)]
+    Q --> SC[(Spec collection<br/>OBL Read/Write API v4.0.1<br/>89 chunks)]
+    RC --> M[Score floor 0.28,<br/>equal share of top-6 per collection]
     SC --> M
     M -->|nothing above the floor| X[Refusal, no model call]
     M --> G[gemini-3.5-flash-lite<br/>grounded synthesis over numbered sources]
@@ -15,7 +12,9 @@ flowchart TD
     G -->|INSUFFICIENT_CONTEXT| X
 ```
 
-Every stage is a plain Python module with one job (`src/obrag/`): `ingest/` fetches and chunks, `index/` embeds and stores, `query/` routes, retrieves and generates, `evaluation/` scores, `app/` is the Streamlit shell. `query.pipeline.ask()` is the only entry point the UI and the eval call.
+Every stage is a plain Python module with one job (`src/obrag/`): `ingest/` fetches and chunks, `index/` embeds and stores, `query/` retrieves and generates, `evaluation/` scores, `app/` is the Streamlit shell. `query.pipeline.ask()` is the only entry point the UI and the eval call.
+
+Every question searches both collections. A router (`query/router.py`) that picked one or both was used in eval runs 1-4, then switched off on 2026-10-22 (`use_router` in `config.py`): its free-tier model took 95s per call, so it hit its 8s deadline every time and fell back to both collections anyway. The app's example answers are saved in `data/examples.json` and served at launch with no API call; `python -m obrag.app.examples` regenerates them.
 
 ## Sources and chunking
 

@@ -63,6 +63,7 @@ def run_eval(label: str, settings: Settings, golden_path=None, resume_run_id: in
             label,
             {
                 "embedding_model": settings.embedding_model,
+                "use_router": settings.use_router,
                 "router_model": settings.router_model,
                 "generation_model": settings.generation_model,
                 "judge_model": settings.judge_model,

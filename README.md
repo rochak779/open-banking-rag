@@ -19,7 +19,7 @@ Generic RAG breaks on this material. Fixed-size chunks cut through regulation nu
 ## What it does
 
 - Answers in plain English, with every claim linked to the exact regulation or API endpoint it came from.
-- Decides whether a question needs the law, the API spec, or both, and searches accordingly.
+- Searches the law and the API spec together, with each guaranteed a share of the results so one side can't crowd out the other.
 - Says "the sources don't cover this" instead of guessing, including on plausible trap questions.
 - Shows the retrieved sources next to every answer, so the reader can check it.
 

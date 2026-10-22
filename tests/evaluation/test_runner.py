@@ -60,6 +60,14 @@ def test_routing_is_scored_from_the_route_the_answer_used(tmp_path, monkeypatch)
     assert rows_for(tmp_path)["reg-01"]["routing_correct"] == 0
 
 
+def test_a_run_records_whether_the_router_was_on(tmp_path, monkeypatch):
+    # Runs 1-4 routed; later runs search both collections. Without this flag the
+    # stored config would name a router_model that the run never called.
+    patch_everything(monkeypatch, lambda q: Answer(text="a", citations=[], refused=False, retrieved=[HIT]))
+    rows_for(tmp_path)
+    assert runner.EvalStore(make_settings(tmp_path)).runs()[0]["config"]["use_router"] is False
+
+
 def test_refusal_correctness_is_recorded_for_both_bands(tmp_path, monkeypatch):
     patch_everything(
         monkeypatch,

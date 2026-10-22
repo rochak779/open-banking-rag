@@ -8,26 +8,16 @@ from dataclasses import replace
 
 import streamlit as st
 
-from obrag.app.limits import QueryBudget, cache_answer, cached_answer, resolve_answer
+from obrag.app.examples import EXAMPLES, load_examples
+from obrag.app.limits import QueryBudget, cache_answer, resolve_answer
 from obrag.config import DISCLAIMER, SNAPSHOT_DATE, load_settings
 from obrag.evaluation.runner import summarise
 from obrag.evaluation.storage import EvalStore
 from obrag.models import Answer
 from obrag.query.pipeline import ask
 
-# Chosen from the golden-set runs: each answered (or, for the last, refused)
-# correctly with full marks, so the pre-cached answers are the system at its best
-# on each band. The original headline SCA question is declined (see the case study).
-EXAMPLES = [
-    "What must a funds confirmation for a card-based payment contain under the PSRs, "
-    "and how does the Confirmation of Funds API return it?",
-    "How much can a payer be made to pay for an unauthorised payment made with a lost or stolen card?",
-    "What happens if a PISP sends the same x-idempotency-key twice when creating a domestic payment?",
-    "What is Barclays' rate limit on the accounts endpoint?",
-]
-
-# One router and one generator call per question, each against its own 500/day
-# free quota shared by all visitors.
+# One generator call per question, against a 500/day free quota shared by all
+# visitors.
 MAX_QUERIES_PER_SESSION = 10
 
 
@@ -112,13 +102,9 @@ def main() -> None:
     # No Gemini retries: a visitor on an exhausted free-tier quota should see the
     # "unavailable" message in seconds, not after the SDK waits out 429s.
     settings = replace(load_settings(), gemini_retries=0)
-    # The example cache is module-level, so it is shared by every session in this
-    # process: a cold start costs one ask() per example, not every visitor.
     if "obrag_examples_cached" not in st.session_state:
-        with st.spinner("Warming up the example answers..."):
-            for example in EXAMPLES:
-                if cached_answer(example) is None:
-                    cache_answer(example, ask(example, settings=settings))
+        for example, answer in load_examples().items():
+            cache_answer(example, answer)
         st.session_state["obrag_examples_cached"] = True
 
     ask_tab, eval_tab = st.tabs(["Ask", "Evaluation"])
