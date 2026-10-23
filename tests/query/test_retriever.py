@@ -104,6 +104,21 @@ def test_each_routed_collection_gets_a_fair_share_of_slots():
     assert [r.score for r in results] == sorted((r.score for r in results), reverse=True)
 
 
+def test_searching_both_collections_keeps_six_sources_from_each_side_by_default():
+    # The router used to give a one-sided question all 6 slots. With every question
+    # searching both, a 3-slot share pushed PSR regulation 2 (5th among law hits)
+    # out of "What is a payment initiation service?" in eval run 5.
+    store = FakeStore({
+        "regulation": [RetrievedChunk(chunk(f"r{i}", "regulation"), 0.56 - i / 100) for i in range(8)],
+        "spec": [RetrievedChunk(chunk(f"s{i}", "spec"), 0.48 - i / 100) for i in range(8)],
+    })
+    results = Retriever(make_settings(), embedder=FakeEmbedder(), store=store).retrieve(
+        "q", ["regulation", "spec"]
+    )
+    assert [r.chunk.id for r in results if r.chunk.collection == "regulation"] == [f"r{i}" for i in range(6)]
+    assert [r.chunk.id for r in results if r.chunk.collection == "spec"] == [f"s{i}" for i in range(6)]
+
+
 def test_unused_share_is_filled_from_the_other_collection():
     store = FakeStore({
         "regulation": [RetrievedChunk(chunk("r0", "regulation"), 0.5)],

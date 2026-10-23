@@ -1,6 +1,6 @@
 {
   "What must a funds confirmation for a card-based payment contain under the PSRs, and how does the Confirmation of Funds API return it?": {
-    "text": "Under PSR 2017 regulation 68, an account servicing payment service provider must provide the requested confirmation in the form of a 'yes' or 'no' answer, and must not include a statement of the account balance [1]. Read together with the API specification, the `POST /funds-confirmations` endpoint supports this by returning a boolean `FundsAvailable` result on success (HTTP 201) along with the `FundsConfirmationId`, related `ConsentId`, `CreationDateTime`, `Reference`, and the checked `InstructedAmount`, while checking availability only without moving, reserving funds, or providing a balance statement [2].",
+    "text": "Under PSR 2017 regulation 68, an ASPSP must provide the requested funds confirmation in the form of a 'yes' or 'no' answer, and must not include a statement of the account balance or block funds on the payer's payment account [1]. Read together with the Confirmation of Funds API specification, the `POST /funds-confirmations` endpoint enables a CBPII to check available funds using this consent, and upon success (HTTP 201) returns the response containing the boolean `FundsAvailable` result (corresponding to the 'yes' or 'no' answer), alongside the `FundsConfirmationId`, related `ConsentId`, `CreationDateTime`, `Reference`, and the `InstructedAmount` checked [2].",
     "citations": [
       "PSR 2017, regulation 68",
       "Confirmation of Funds API Specification v4.0.1 — POST /funds-confirmations"
@@ -15,11 +15,11 @@
           "citation": "Confirmation of Funds API Specification v4.0.1 — POST /funds-confirmations",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/confirmation-funds-openapi.yaml",
           "metadata": {
-            "path": "/funds-confirmations",
-            "method": "POST",
-            "operation_id": "CreateFundsConfirmations",
             "api": "Confirmation of Funds API Specification",
-            "api_version": "4.0.1"
+            "path": "/funds-confirmations",
+            "api_version": "4.0.1",
+            "method": "POST",
+            "operation_id": "CreateFundsConfirmations"
           }
         },
         "score": 0.5448235273361206
@@ -33,10 +33,10 @@
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
             "api": "Payment Initiation API",
-            "operation_id": "GetDomesticPaymentConsentsConsentIdFundsConfirmation",
             "api_version": "4.0.1",
             "method": "GET",
-            "path": "/domestic-payment-consents/{ConsentId}/funds-confirmation"
+            "path": "/domestic-payment-consents/{ConsentId}/funds-confirmation",
+            "operation_id": "GetDomesticPaymentConsentsConsentIdFundsConfirmation"
           }
         },
         "score": 0.537702202796936
@@ -49,9 +49,9 @@
           "citation": "PSR 2017, regulation 68",
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/68",
           "metadata": {
+            "heading": "Confirmation of availability of funds for card-based payment transactions",
             "provision_id": "regulation-68",
-            "instrument": "PSR 2017",
-            "heading": "Confirmation of availability of funds for card-based payment transactions"
+            "instrument": "PSR 2017"
           }
         },
         "score": 0.5296629071235657
@@ -64,14 +64,65 @@
           "citation": "OBL VRP Profile v4.0.1 — POST /domestic-vrp-consents/{ConsentId}/funds-confirmation",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/vrp-openapi.yaml",
           "metadata": {
-            "path": "/domestic-vrp-consents/{ConsentId}/funds-confirmation",
             "operation_id": "domesticVrpConsentsFundsConfirmation",
-            "api": "OBL VRP Profile",
             "method": "POST",
-            "api_version": "4.0.1"
+            "api": "OBL VRP Profile",
+            "api_version": "4.0.1",
+            "path": "/domestic-vrp-consents/{ConsentId}/funds-confirmation"
           }
         },
         "score": 0.5191173553466797
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:get:/international-payment-consents/{ConsentId}/funds-confirmation",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: GET /international-payment-consents/{ConsentId}/funds-confirmation\nSummary: Confirm Funds Availability for an International Payment\nDescription: Enables a PISP to check whether a PSU has sufficient available funds for an International Payment.\nParameters:\n  - ConsentId (in path, required): ConsentId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: International Payment Consents Read — OBWriteFundsConfirmationResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — GET /international-payment-consents/{ConsentId}/funds-confirmation",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "operation_id": "GetInternationalPaymentConsentsConsentIdFundsConfirmation",
+            "api": "Payment Initiation API",
+            "method": "GET",
+            "api_version": "4.0.1",
+            "path": "/international-payment-consents/{ConsentId}/funds-confirmation"
+          }
+        },
+        "score": 0.5178365707397461
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:get:/international-scheduled-payment-consents/{ConsentId}/funds-confirmation",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: GET /international-scheduled-payment-consents/{ConsentId}/funds-confirmation\nSummary: Confirm Funds Availability for an International Scheduled Payment\nDescription: Enables a PISP to check whether a PSU has sufficient available funds for an International Scheduled Payment.\nParameters:\n  - ConsentId (in path, required): ConsentId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: International Scheduled Payment Consents Read — OBWriteFundsConfirmationResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — GET /international-scheduled-payment-consents/{ConsentId}/funds-confirmation",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "method": "GET",
+            "api_version": "4.0.1",
+            "api": "Payment Initiation API",
+            "path": "/international-scheduled-payment-consents/{ConsentId}/funds-confirmation",
+            "operation_id": "GetInternationalScheduledPaymentConsentsConsentIdFundsConfirmation"
+          }
+        },
+        "score": 0.5046401619911194
+      },
+      {
+        "chunk": {
+          "id": "spec:confirmation-funds-openapi:get:/funds-confirmation-consents/{ConsentId}",
+          "text": "Confirmation of Funds API Specification v4.0.1\nEndpoint: GET /funds-confirmation-consents/{ConsentId}\nSummary: Get a Funds Confirmation Consent\nDescription: Enables a CBPII to retrieve the status of a Funds Confirmation Consent resource.\n\nOn success (HTTP 200), the response contains the consent `ConsentId`, `CreationDateTime`, current `Status`, `StatusUpdateDateTime`, optional `StatusReason`, optional `ExpirationDateTime`, and the `DebtorAccount` associated with the consent.\n\n**Note:** This operation is read-only. It does not change the consent status, authorise the consent, revoke the consent, or perform a funds availability check.\nParameters:\n  - ConsentId (in path, required): `ConsentId`\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP.\n\nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below:\n\n`Sun, 10 Sep 2017 19:43:31 UTC`\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per <https://datatracker.ietf.org/doc/html/rfc6750>\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-jws-signature (in header, optional): A detached JWS signature of the body of the payload.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers.\n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\nResponses:\n  - 200: Funds Confirmation Consent Read — OBFundsConfirmationConsentResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Confirmation of Funds API Specification v4.0.1 — GET /funds-confirmation-consents/{ConsentId}",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/confirmation-funds-openapi.yaml",
+          "metadata": {
+            "api_version": "4.0.1",
+            "operation_id": "GetFundsConfirmationConsentsConsentId",
+            "method": "GET",
+            "path": "/funds-confirmation-consents/{ConsentId}",
+            "api": "Confirmation of Funds API Specification"
+          }
+        },
+        "score": 0.4936786890029907
       },
       {
         "chunk": {
@@ -96,17 +147,62 @@
           "citation": "PSR 2017, regulation 44",
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/44",
           "metadata": {
-            "provision_id": "regulation-44",
+            "instrument": "PSR 2017",
             "heading": "Information required after the initiation of a payment order",
-            "instrument": "PSR 2017"
+            "provision_id": "regulation-44"
           }
         },
         "score": 0.48900580406188965
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-45",
+          "text": "PSR 2017, regulation 45 — PART 6 Information Requirements for Payment Services — Information required after receipt of the payment order\n\n(1) The payer's payment service provider must, immediately after receipt of the payment order, provide or make available to the payer the information specified in paragraph (2) in relation to the service to be provided by the payer's payment service provider.\n(2) The information referred to in paragraph (1) is—\n(a) a reference enabling the payer to identify the payment transaction and, where appropriate, information relating to the payee;\n(b) the amount of the payment transaction in the currency used in the payment order;\n(c) the amount of any charges for the payment transaction payable by the payer and, where applicable, a breakdown of the amounts of such charges;\n(d) where an exchange rate is used in the payment transaction and the actual rate used in the payment transaction differs from the rate provided in accordance with regulation 43(2)(d), the actual rate used or a reference to it, and the amount of the payment transaction after that currency conversion; and\n(e) the date on which the payment service provider received the payment order.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 45",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/45",
+          "metadata": {
+            "instrument": "PSR 2017",
+            "heading": "Information required after receipt of the payment order",
+            "provision_id": "regulation-45"
+          }
+        },
+        "score": 0.4743430018424988
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-54",
+          "text": "PSR 2017, regulation 54 — PART 6 Information Requirements for Payment Services — Information for the payee on individual payment transactions\n\n(1) The payee's payment service provider under a framework contract must provide to the payee the information specified in paragraph (2) in respect of each payment transaction on paper or on another durable medium at least once per month free of charge.\n(2) The information is—\n(a) a reference enabling the payee to identify the payment transaction and the payer, and any information transferred with the payment transaction;\n(b) the amount of the payment transaction in the currency in which the payee's payment account is credited;\n(c) the amount of any charges for the payment transaction and, where applicable, a breakdown of the amounts of such charges, or the interest payable by the payee;\n(d) where applicable, the exchange rate used in the payment transaction by the payee's payment service provider, and the amount of the payment transaction before that currency conversion; and\n(e) the credit value date.\n(3) A framework contract may include a condition that the information specified in paragraph (2) is to be provided or made available periodically at least once a month and in an agreed manner which enables the payee to store and reproduce the information unchanged.\n(4) Paragraph (1) does not require a payment service provider to provide information where—\n(a) the information has been, or is to be, provided or made available in accordance with a condition of the type referred to in paragraph (3); or\n(b) more than one month has passed since information was last provided, but there are no payment transactions in respect of which the payment service provider has not previously provided or made available information in accordance with paragraph (1) or in accordance with a condition of the type referred to in paragraph (3).",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 54",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/54",
+          "metadata": {
+            "instrument": "PSR 2017",
+            "heading": "Information for the payee on individual payment transactions",
+            "provision_id": "regulation-54"
+          }
+        },
+        "score": 0.44251757860183716
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-53",
+          "text": "PSR 2017, regulation 53 — PART 6 Information Requirements for Payment Services — Information for the payer on individual payment transactions\n\n(1) The payer's payment service provider under a framework contract must provide to the payer the information specified in paragraph (2) in respect of each payment transaction on paper or on another durable medium at least once per month free of charge.\n(2) The information is—\n(a) a reference enabling the payer to identify the payment transaction and, where appropriate, information relating to the payee;\n(b) the amount of the payment transaction in the currency in which the payer's payment account is debited or in the currency used for the payment order;\n(c) the amount of any charges for the payment transaction and, where applicable, a breakdown of the amounts of such charges, or the interest payable by the payer;\n(d) where applicable, the exchange rate used in the payment transaction by the payer's payment service provider and the amount of the payment transaction after that currency conversion; and\n(e) the debit value date or the date of receipt of the payment order.\n(3) A framework contract may include a condition that the payer may require the information specified in paragraph (2) be provided or made available periodically at least once a month, free of charge and in an agreed manner which enables the payer to store and reproduce the information unchanged.\n(4) Paragraph (1) does not require a payment service provider to provide information where—\n(a) the information has been, or is to be, provided or made available as required by the payer under a condition of the type referred to in paragraph (3); or\n(b) more than one month has passed since information was last provided, but there are no payment transactions in respect of which the payment service provider has not previously provided or made available information in accordance with paragraph (1) or as required by the payer under a condition of the type referred to in paragraph (3).",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 53",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/53",
+          "metadata": {
+            "instrument": "PSR 2017",
+            "heading": "Information for the payer on individual payment transactions",
+            "provision_id": "regulation-53"
+          }
+        },
+        "score": 0.44195348024368286
       }
     ]
   },
   "How much can a payer be made to pay for an unauthorised payment made with a lost or stolen card?": {
-    "text": "A payment service provider may require a payer to be liable up to a maximum of £35 for losses incurred from unauthorised payment transactions arising from a lost, stolen, or misappropriated payment instrument [1]. \n\nHowever, this £35 limit does not apply if the loss, theft, or misappropriation was not detectable by the payer prior to the payment (unless the payer acted fraudulently), or if the loss was caused by acts or omissions of an employee, agent, branch, or representative of the payment service provider [1]. Furthermore, the payer is liable for all losses if they acted fraudulently or with intent or gross negligence failed to comply with their obligations regarding payment instruments and personalised security credentials [1]. Conversely, the payer is not liable for any losses (except in cases of fraud) arising after notification, if the provider failed to provide appropriate means for notification, if strong customer authentication was required but not demanded by the provider, or if the instrument was used in connection with certain distance contracts [1].",
+    "text": "Subject to exceptions where the payer acted fraudulently or with intent or gross negligence regarding their credentials, a payment service provider may require a payer to be liable up to a maximum of £35 for losses incurred from unauthorised payment transactions arising from a lost, stolen, or misappropriated payment instrument [1].",
     "citations": [
       "PSR 2017, regulation 77"
     ],
@@ -121,8 +217,8 @@
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/77",
           "metadata": {
             "heading": "Payer or payee's liability for unauthorised payment transactions",
-            "instrument": "PSR 2017",
-            "provision_id": "regulation-77"
+            "provision_id": "regulation-77",
+            "instrument": "PSR 2017"
           }
         },
         "score": 0.5865741968154907
@@ -135,8 +231,8 @@
           "citation": "PSR 2017, regulation 79",
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/79",
           "metadata": {
-            "provision_id": "regulation-79",
             "heading": "Refunds for payment transactions initiated by or through a payee",
+            "provision_id": "regulation-79",
             "instrument": "PSR 2017"
           }
         },
@@ -151,11 +247,56 @@
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/76",
           "metadata": {
             "heading": "Payment service provider's liability for unauthorised payment transactions",
-            "instrument": "PSR 2017",
-            "provision_id": "regulation-76"
+            "provision_id": "regulation-76",
+            "instrument": "PSR 2017"
           }
         },
         "score": 0.4544900059700012
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-95",
+          "text": "PSR 2017, regulation 95 — PART 7 Rights and Obligations in Relation to the Provision of Payment Services — Right of recourse\n\nWhere the liability of a payment service provider (“the first provider”) under regulation 76, 91, 92 or 93 (payment service providers' liability for unauthorised or defective payment transactions) is attributable to another payment service provider or an intermediary, including where there is a failure to use strong customer authentication as required by regulation 100 (authentication), the other payment service provider or intermediary must compensate the first provider for any losses incurred or sums paid pursuant to those regulations.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 95",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/95",
+          "metadata": {
+            "provision_id": "regulation-95",
+            "instrument": "PSR 2017",
+            "heading": "Right of recourse"
+          }
+        },
+        "score": 0.442607045173645
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-65",
+          "text": "PSR 2017, regulation 65 — PART 7 Rights and Obligations in Relation to the Provision of Payment Services — Disapplication of certain regulations in the case of low value payment instruments\n\n(1) This regulation applies in respect of payment instruments which, under the framework contract governing their use—\n(a) can be used only to execute individual payment transactions of 30 euros or less, or in relation to payment transactions executed wholly within the United Kingdom, 60 euros or less;\n(b) have a spending limit of 150 euros, or where payment transactions must be executed wholly within the United Kingdom, 300 euros; or\n(c) store funds that do not exceed 500 euros at any time.\n(2) Where this regulation applies the parties may agree that—\n(a) regulations 72(1)(b) (obligation to notify loss or misuse of instrument), 73(1)(c), (d) and (e) (means of notifying loss) and 77(4) (payer not liable for certain losses) do not apply where the payment instrument does not allow for the stopping or prevention of its use;\n(b) regulations 75 (evidence on authentication and execution), 76 (payment service provider's liability for unauthorised transactions) and 77(1) and (2) (payer's liability for unauthorised transactions) do not apply where the payment instrument is used anonymously or the payment service provider is not in a position, for other reasons concerning the payment instrument, to prove that a payment transaction was authorised;\n(c) despite regulation 82(1) (refusal of payment orders), the payment service provider is not required to notify the payment service user of the refusal of a payment order if the non-execution is apparent from the context;\n(d) the payer may not revoke the payment order under regulation 83 after transmitting the payment order or giving their consent to execute the payment transaction to the payee;\n(e) execution periods other than those provided by regulations 86 (payment transactions to payment account) and 87 (absence of payment account) apply.\n(3) Subject to paragraph (2)(b), regulations 76 (payment service provider's liability for unauthorised transactions) and 77(1) and (2) (payer's liability for unauthorised transactions) apply to electronic money unless the payer's payment service provider does not have the ability under the contract to—\n(a) freeze the payment account on which the electronic money is stored; or\n(b) stop the use of the payment instrument.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 65",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/65",
+          "metadata": {
+            "provision_id": "regulation-65",
+            "instrument": "PSR 2017",
+            "heading": "Disapplication of certain regulations in the case of low value payment instruments"
+          }
+        },
+        "score": 0.44147753715515137
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-78",
+          "text": "PSR 2017, regulation 78 — PART 7 Rights and Obligations in Relation to the Provision of Payment Services — Payment transactions where the transaction amount is not known in advance\n\nWhere a card-based payment transaction is initiated by or through the payee and the amount of the transaction is not known when the payer authorises the transaction—\n(a) the payer's payment service provider may not block funds on the payer's payment account unless the payer has authorised the exact amount of the funds to be blocked; and\n(b) the payer's payment service provider must release the blocked funds without undue delay after becoming aware of the amount of the payment transaction, and in any event immediately after receipt of the payment order.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 78",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/78",
+          "metadata": {
+            "heading": "Payment transactions where the transaction amount is not known in advance",
+            "instrument": "PSR 2017",
+            "provision_id": "regulation-78"
+          }
+        },
+        "score": 0.438299298286438
       },
       {
         "chunk": {
@@ -165,11 +306,11 @@
           "citation": "Payment Initiation API v4.0.1 — GET /domestic-payments/{DomesticPaymentId}/payment-details",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
+            "api": "Payment Initiation API",
             "path": "/domestic-payments/{DomesticPaymentId}/payment-details",
-            "api_version": "4.0.1",
             "operation_id": "GetDomesticPaymentsDomesticPaymentIdPaymentDetails",
-            "method": "GET",
-            "api": "Payment Initiation API"
+            "api_version": "4.0.1",
+            "method": "GET"
           }
         },
         "score": 0.3369557857513428
@@ -182,11 +323,11 @@
           "citation": "Payment Initiation API v4.0.1 — POST /domestic-payments",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
-            "operation_id": "CreateDomesticPayments",
             "method": "POST",
-            "api_version": "4.0.1",
             "api": "Payment Initiation API",
-            "path": "/domestic-payments"
+            "path": "/domestic-payments",
+            "api_version": "4.0.1",
+            "operation_id": "CreateDomesticPayments"
           }
         },
         "score": 0.3345099687576294
@@ -199,19 +340,70 @@
           "citation": "Payment Initiation API v4.0.1 — GET /domestic-payments/{DomesticPaymentId}",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
-            "api_version": "4.0.1",
             "method": "GET",
-            "path": "/domestic-payments/{DomesticPaymentId}",
+            "operation_id": "GetDomesticPaymentsDomesticPaymentId",
             "api": "Payment Initiation API",
-            "operation_id": "GetDomesticPaymentsDomesticPaymentId"
+            "api_version": "4.0.1",
+            "path": "/domestic-payments/{DomesticPaymentId}"
           }
         },
         "score": 0.3292914628982544
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:get:/file-payments/{FilePaymentId}/payment-details",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: GET /file-payments/{FilePaymentId}/payment-details\nSummary: Get payment details for a File Payment\nDescription: Enables a PISP to retrieve detailed information on the status of payments within a File.\nParameters:\n  - FilePaymentId (in path, required): FilePaymentId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Payment Details Read — OBWritePaymentDetailsResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — GET /file-payments/{FilePaymentId}/payment-details",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "operation_id": "GetFilePaymentsFilePaymentIdPaymentDetails",
+            "api_version": "4.0.1",
+            "api": "Payment Initiation API",
+            "method": "GET",
+            "path": "/file-payments/{FilePaymentId}/payment-details"
+          }
+        },
+        "score": 0.3287675380706787
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:get:/domestic-standing-orders/{DomesticStandingOrderId}/payment-details",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: GET /domestic-standing-orders/{DomesticStandingOrderId}/payment-details\nSummary: Get details of a Domestic Standing Order Payment\nDescription: Enables a PISP to retrieve detailed information on the status of a Domestic Standing Order payment.\nParameters:\n  - DomesticStandingOrderId (in path, required): DomesticStandingOrderId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Payment Details Read — OBWritePaymentDetailsResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — GET /domestic-standing-orders/{DomesticStandingOrderId}/payment-details",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "api": "Payment Initiation API",
+            "method": "GET",
+            "api_version": "4.0.1",
+            "operation_id": "GetDomesticStandingOrdersDomesticStandingOrderIdPaymentDetails",
+            "path": "/domestic-standing-orders/{DomesticStandingOrderId}/payment-details"
+          }
+        },
+        "score": 0.3250730037689209
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:get:/domestic-scheduled-payments/{DomesticScheduledPaymentId}/payment-details",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: GET /domestic-scheduled-payments/{DomesticScheduledPaymentId}/payment-details\nSummary: Get details of a Domestic Scheduled Payment\nDescription: Enables a PISP to retrieve detailed information on the status of a Domestic Scheduled Payment.\nParameters:\n  - DomesticScheduledPaymentId (in path, required): DomesticScheduledPaymentId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Payment Details Read — OBWritePaymentDetailsResponse1\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — GET /domestic-scheduled-payments/{DomesticScheduledPaymentId}/payment-details",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "path": "/domestic-scheduled-payments/{DomesticScheduledPaymentId}/payment-details",
+            "api": "Payment Initiation API",
+            "operation_id": "GetDomesticScheduledPaymentsDomesticScheduledPaymentIdPaymentDetails",
+            "api_version": "4.0.1",
+            "method": "GET"
+          }
+        },
+        "score": 0.32315945625305176
       }
     ]
   },
   "What happens if a PISP sends the same x-idempotency-key twice when creating a domestic payment?": {
-    "text": "Every request using the `x-idempotency-key` header will be processed only once per key, and the idempotency key remains valid for 24 hours [1]. If a duplicate idempotency key is submitted, the API responds with status code 422 (Duplicate Idempotency key) along with an `OBErrorResponse1` object containing an array of detail error codes, messages, and URLs to documentation for remediation [1].",
+    "text": "Every request will be processed only once per `x-idempotency-key`, and the idempotency key remains valid for 24 hours [1]. If a duplicate idempotency key is submitted, the API responds with a `422` status code (\"Duplicate Idempotency key\") accompanied by an `OBErrorResponse1` object containing an array of detail error codes, messages, and URLs to documentation for remediation [1].",
     "citations": [
       "Payment Initiation API v4.0.1 — POST /domestic-payments"
     ],
@@ -225,14 +417,14 @@
           "citation": "Payment Initiation API v4.0.1 — POST /domestic-payments",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
-            "api_version": "4.0.1",
-            "path": "/domestic-payments",
             "operation_id": "CreateDomesticPayments",
+            "path": "/domestic-payments",
             "api": "Payment Initiation API",
-            "method": "POST"
+            "method": "POST",
+            "api_version": "4.0.1"
           }
         },
-        "score": 0.5726822018623352
+        "score": 0.5729798078536987
       },
       {
         "chunk": {
@@ -242,14 +434,14 @@
           "citation": "Payment Initiation API v4.0.1 — POST /domestic-payment-consents",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
-            "operation_id": "CreateDomesticPaymentConsents",
             "api_version": "4.0.1",
-            "path": "/domestic-payment-consents",
+            "method": "POST",
+            "operation_id": "CreateDomesticPaymentConsents",
             "api": "Payment Initiation API",
-            "method": "POST"
+            "path": "/domestic-payment-consents"
           }
         },
-        "score": 0.5498756170272827
+        "score": 0.5498523712158203
       },
       {
         "chunk": {
@@ -259,14 +451,65 @@
           "citation": "Payment Initiation API v4.0.1 — POST /domestic-scheduled-payments",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
           "metadata": {
-            "path": "/domestic-scheduled-payments",
             "method": "POST",
-            "api": "Payment Initiation API",
             "operation_id": "CreateDomesticScheduledPayments",
+            "api_version": "4.0.1",
+            "path": "/domestic-scheduled-payments",
+            "api": "Payment Initiation API"
+          }
+        },
+        "score": 0.5453555583953857
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:post:/domestic-scheduled-payment-consents",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: POST /domestic-scheduled-payment-consents\nSummary: Create a Domestic Scheduled Payment Consent\nDescription: Enables a PISP to register an intent to initiate a Domestic Scheduled Payment.\nParameters:\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-idempotency-key (in header, required): Every request will be processed only once per x-idempotency-key.  The\nIdempotency Key will be valid for 24 hours.\n\n  - x-jws-signature (in header, required): A detached JWS signature of the body of the payload.\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nRequest body: OBWriteDomesticScheduledConsent4\nResponses:\n  - 201: Domestic Scheduled Payment Consents Created — OBWriteDomesticScheduledConsentResponse5\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 409: Conflict — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 415: Unsupported Media Type\n  - 422: Duplicate Idempotency key — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — POST /domestic-scheduled-payment-consents",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "api_version": "4.0.1",
+            "path": "/domestic-scheduled-payment-consents",
+            "method": "POST",
+            "operation_id": "CreateDomesticScheduledPaymentConsents",
+            "api": "Payment Initiation API"
+          }
+        },
+        "score": 0.5422699451446533
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:post:/domestic-standing-orders",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: POST /domestic-standing-orders\nSummary: Submit a Domestic Standing Order\nDescription: Enables a PISP to submit a Domestic Standing Order payment under an already PSU-approved Domestic Standing Order arrangement.\nParameters:\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-idempotency-key (in header, required): Every request will be processed only once per x-idempotency-key.  The\nIdempotency Key will be valid for 24 hours.\n\n  - x-jws-signature (in header, required): A detached JWS signature of the body of the payload.\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nRequest body: OBWriteDomesticStandingOrder3\nResponses:\n  - 201: Domestic Standing Orders Created — OBWriteDomesticStandingOrderResponse6\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 409: Conflict — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 415: Unsupported Media Type\n  - 422: Duplicate Idempotency key — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — POST /domestic-standing-orders",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "api": "Payment Initiation API",
+            "path": "/domestic-standing-orders",
+            "method": "POST",
+            "operation_id": "CreateDomesticStandingOrders",
             "api_version": "4.0.1"
           }
         },
-        "score": 0.5450356006622314
+        "score": 0.5236010551452637
+      },
+      {
+        "chunk": {
+          "id": "spec:payment-initiation-openapi:post:/domestic-standing-order-consents",
+          "text": "Payment Initiation API v4.0.1\nEndpoint: POST /domestic-standing-order-consents\nSummary: Create a Domestic Standing Order Consent\nDescription: Enables a PISP to register an intent to initiate a Domestic Standing Order arrangement.\nParameters:\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-idempotency-key (in header, required): Every request will be processed only once per x-idempotency-key.  The\nIdempotency Key will be valid for 24 hours.\n\n  - x-jws-signature (in header, required): A detached JWS signature of the body of the payload.\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nRequest body: OBWriteDomesticStandingOrderConsent5\nResponses:\n  - 201: Domestic Standing Order Consents Created — OBWriteDomesticStandingOrderConsentResponse6\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 409: Conflict — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 415: Unsupported Media Type\n  - 422: Duplicate Idempotency key — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Payment Initiation API v4.0.1 — POST /domestic-standing-order-consents",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/payment-initiation-openapi.yaml",
+          "metadata": {
+            "method": "POST",
+            "path": "/domestic-standing-order-consents",
+            "api": "Payment Initiation API",
+            "operation_id": "CreateDomesticStandingOrderConsents",
+            "api_version": "4.0.1"
+          }
+        },
+        "score": 0.5120832324028015
       },
       {
         "chunk": {
@@ -276,12 +519,12 @@
           "citation": "PSR 2017, regulation 90",
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/90",
           "metadata": {
-            "provision_id": "regulation-90",
+            "instrument": "PSR 2017",
             "heading": "Incorrect unique identifiers",
-            "instrument": "PSR 2017"
+            "provision_id": "regulation-90"
           }
         },
-        "score": 0.4085351228713989
+        "score": 0.40888214111328125
       },
       {
         "chunk": {
@@ -292,11 +535,11 @@
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/47",
           "metadata": {
             "instrument": "PSR 2017",
-            "provision_id": "regulation-47",
-            "heading": "Avoidance of duplication of information"
+            "heading": "Avoidance of duplication of information",
+            "provision_id": "regulation-47"
           }
         },
-        "score": 0.38353651762008667
+        "score": 0.383669376373291
       },
       {
         "chunk": {
@@ -306,17 +549,62 @@
           "citation": "SCA-RTS (EU) 2018/389, article 14",
           "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/14",
           "metadata": {
-            "instrument": "SCA-RTS (EU) 2018/389",
             "provision_id": "article-14",
+            "instrument": "SCA-RTS (EU) 2018/389",
             "heading": "Recurring transactions"
           }
         },
-        "score": 0.3811594247817993
+        "score": 0.3813791871070862
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-75",
+          "text": "PSR 2017, regulation 75 — PART 7 Rights and Obligations in Relation to the Provision of Payment Services — Evidence on authentication and execution of payment transactions\n\n(1) Where a payment service user—\n(a) denies having authorised an executed payment transaction; or\n(b) claims that a payment transaction has not been correctly executed,\nit is for the payment service provider to prove that the payment transaction was authenticated, accurately recorded, entered in the payment service provider's accounts and not affected by a technical breakdown or some other deficiency in the service provided by the payment service provider.\n(2) If a payment transaction was initiated through a payment initiation service provider, it is for the payment initiation service provider to prove that, within its sphere of competence, the payment transaction was authenticated, accurately recorded and not affected by a technical breakdown or other deficiency linked to the payment initiation service.\n(3) Where a payment service user denies having authorised an executed payment transaction, the use of a payment instrument recorded by the payment service provider, including a payment initiation service provider where appropriate, is not in itself necessarily sufficient to prove either that—\n(a) the payment transaction was authorised by the payer; or\n(b) the payer acted fraudulently or failed with intent or gross negligence to comply with regulation 72 (user's obligations in relation to payment instruments and personalised security credentials).\n(4) If a payment service provider, including a payment initiation service provider where appropriate, claims that a payer acted fraudulently or failed with intent or gross negligence to comply with regulation 72, the payment service provider must provide supporting evidence to the payer.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 75",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/75",
+          "metadata": {
+            "instrument": "PSR 2017",
+            "provision_id": "regulation-75",
+            "heading": "Evidence on authentication and execution of payment transactions"
+          }
+        },
+        "score": 0.35863637924194336
+      },
+      {
+        "chunk": {
+          "id": "reg:sca_rts:article-15",
+          "text": "SCA-RTS (EU) 2018/389, article 15 — CHAPTER III EXEMPTIONS FROM STRONG CUSTOMER AUTHENTICATION — Credit transfers between accounts held by the same natural or legal person\n\nPayment service providers shall be allowed not to apply strong customer authentication, subject to compliance with the requirements laid down in Article 2, where the payer initiates a credit transfer in circumstances where the payer and the payee are the same natural or legal person and both payment accounts are held by the same account servicing payment service provider.",
+          "collection": "regulation",
+          "citation": "SCA-RTS (EU) 2018/389, article 15",
+          "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/15",
+          "metadata": {
+            "provision_id": "article-15",
+            "instrument": "SCA-RTS (EU) 2018/389",
+            "heading": "Credit transfers between accounts held by the same natural or legal person"
+          }
+        },
+        "score": 0.3538459539413452
+      },
+      {
+        "chunk": {
+          "id": "reg:sca_rts:article-7",
+          "text": "SCA-RTS (EU) 2018/389, article 7 — CHAPTER II SECURITY MEASURES FOR THE APPLICATION OF STRONG CUSTOMER AUTHENTICATION — Requirements of the elements categorised as possession\n\n(1) Payment service providers shall adopt measures to mitigate the risk that the elements of strong customer authentication categorised as possession are used by unauthorised parties.\n(2) The use by the payer of those elements shall be subject to measures designed to prevent replication of the elements.",
+          "collection": "regulation",
+          "citation": "SCA-RTS (EU) 2018/389, article 7",
+          "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/7",
+          "metadata": {
+            "heading": "Requirements of the elements categorised as possession",
+            "instrument": "SCA-RTS (EU) 2018/389",
+            "provision_id": "article-7"
+          }
+        },
+        "score": 0.3466140031814575
       }
     ]
   },
   "What is Barclays' rate limit on the accounts endpoint?": {
-    "text": "The sources do not contain information regarding Barclays' specific rate limit on the accounts endpoint.",
+    "text": "The sources do not contain rate limit policies specific to Barclays for the accounts endpoint.",
     "citations": [],
     "refused": true,
     "retrieved": [
@@ -328,14 +616,14 @@
           "citation": "Account and Transaction API Specification v4.0.1 — GET /accounts",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
           "metadata": {
+            "path": "/accounts",
+            "api_version": "4.0.1",
             "api": "Account and Transaction API Specification",
             "method": "GET",
-            "operation_id": "GetAccounts",
-            "path": "/accounts",
-            "api_version": "4.0.1"
+            "operation_id": "GetAccounts"
           }
         },
-        "score": 0.49598532915115356
+        "score": 0.4970576763153076
       },
       {
         "chunk": {
@@ -345,14 +633,14 @@
           "citation": "Account and Transaction API Specification v4.0.1 — GET /balances",
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
           "metadata": {
-            "path": "/balances",
-            "api_version": "4.0.1",
             "method": "GET",
+            "path": "/balances",
+            "api": "Account and Transaction API Specification",
             "operation_id": "GetBalances",
-            "api": "Account and Transaction API Specification"
+            "api_version": "4.0.1"
           }
         },
-        "score": 0.4631284475326538
+        "score": 0.46409904956817627
       },
       {
         "chunk": {
@@ -363,13 +651,64 @@
           "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
           "metadata": {
             "api_version": "4.0.1",
+            "method": "GET",
             "path": "/accounts/{AccountId}/balances",
             "operation_id": "GetAccountsAccountIdBalances",
-            "method": "GET",
             "api": "Account and Transaction API Specification"
           }
         },
-        "score": 0.4548792243003845
+        "score": 0.45573890209198
+      },
+      {
+        "chunk": {
+          "id": "spec:account-info-openapi:get:/accounts/{AccountId}",
+          "text": "Account and Transaction API Specification v4.0.1\nEndpoint: GET /accounts/{AccountId}\nSummary: Get an Account by AccountId\nDescription: Enables an AISP to retrieve information about a specific PSU account.\nParameters:\n  - AccountId (in path, required): AccountId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Accounts Read — OBReadAccount6\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Account and Transaction API Specification v4.0.1 — GET /accounts/{AccountId}",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
+          "metadata": {
+            "operation_id": "GetAccountsAccountId",
+            "api_version": "4.0.1",
+            "path": "/accounts/{AccountId}",
+            "api": "Account and Transaction API Specification",
+            "method": "GET"
+          }
+        },
+        "score": 0.44521743059158325
+      },
+      {
+        "chunk": {
+          "id": "spec:account-info-openapi:get:/accounts/{AccountId}/beneficiaries",
+          "text": "Account and Transaction API Specification v4.0.1\nEndpoint: GET /accounts/{AccountId}/beneficiaries\nSummary: Get Beneficiaries for an AccountId\nDescription: Enables an AISP to retrieve Beneficiary information for a specific PSU account.\nParameters:\n  - AccountId (in path, required): AccountId\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Beneficiaries Read — OBReadBeneficiary5\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Account and Transaction API Specification v4.0.1 — GET /accounts/{AccountId}/beneficiaries",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
+          "metadata": {
+            "operation_id": "GetAccountsAccountIdBeneficiaries",
+            "api_version": "4.0.1",
+            "path": "/accounts/{AccountId}/beneficiaries",
+            "api": "Account and Transaction API Specification",
+            "method": "GET"
+          }
+        },
+        "score": 0.4386168122291565
+      },
+      {
+        "chunk": {
+          "id": "spec:account-info-openapi:get:/beneficiaries",
+          "text": "Account and Transaction API Specification v4.0.1\nEndpoint: GET /beneficiaries\nSummary: Get Beneficiaries\nDescription: Enables an AISP to retrieve Beneficiary information for account(s) that the PSU has consented to.\nParameters:\n  - x-fapi-auth-date (in header, optional): The time when the PSU last logged in with the TPP. \nAll dates in the HTTP headers are represented as RFC 7231 Full Dates. An example is below: \nSun, 10 Sep 2017 19:43:31 UTC\n  - x-fapi-customer-ip-address (in header, optional): The PSU's IP address if the PSU is currently logged in with the TPP.\n  - x-fapi-interaction-id (in header, optional): An RFC4122 UID used as a correlation id.\n  - Authorization (in header, required): An Authorisation Token as per https://tools.ietf.org/html/rfc6750\n  - x-customer-user-agent (in header, optional): Indicates the user-agent that the PSU is using.\n  - x-client-id (in header, optional): Only used if an ASPSP requires the client ID in order to return rate limit headers. \n\nTPPs __must__ refer to ASPSP developer portals for further information on any rate limit policies, if the headers are supported and any additional requirements.\n\nThis header __must not__ be used for client authentication\n\nResponses:\n  - 200: Beneficiaries Read — OBReadBeneficiary5\n  - 400: Bad request — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 401: Unauthorized\n  - 403: Forbidden — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.\n  - 404: Not found\n  - 405: Method Not Allowed\n  - 406: Not Acceptable\n  - 429: Too Many Requests\n  - 500: Internal Server Error — OBErrorResponse1: An array of detail error codes, and messages, and URLs to documentation to help remediation.",
+          "collection": "spec",
+          "citation": "Account and Transaction API Specification v4.0.1 — GET /beneficiaries",
+          "source_url": "https://github.com/OpenBankingUK/read-write-api-specs/blob/v4.0.1-Update-1/dist/openapi/account-info-openapi.yaml",
+          "metadata": {
+            "path": "/beneficiaries",
+            "api": "Account and Transaction API Specification",
+            "method": "GET",
+            "operation_id": "GetBeneficiaries",
+            "api_version": "4.0.1"
+          }
+        },
+        "score": 0.4372744560241699
       },
       {
         "chunk": {
@@ -379,12 +718,12 @@
           "citation": "PSR 2017, regulation 71",
           "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/71",
           "metadata": {
-            "provision_id": "regulation-71",
             "instrument": "PSR 2017",
-            "heading": "Limits on the use of payment instruments and access to payment accounts"
+            "heading": "Limits on the use of payment instruments and access to payment accounts",
+            "provision_id": "regulation-71"
           }
         },
-        "score": 0.4195537567138672
+        "score": 0.420654296875
       },
       {
         "chunk": {
@@ -394,12 +733,12 @@
           "citation": "SCA-RTS (EU) 2018/389, article 10",
           "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/10",
           "metadata": {
-            "heading": "Payment account information",
+            "instrument": "SCA-RTS (EU) 2018/389",
             "provision_id": "article-10",
-            "instrument": "SCA-RTS (EU) 2018/389"
+            "heading": "Payment account information"
           }
         },
-        "score": 0.38606226444244385
+        "score": 0.38741564750671387
       },
       {
         "chunk": {
@@ -409,12 +748,57 @@
           "citation": "SCA-RTS (EU) 2018/389, article 36",
           "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/36",
           "metadata": {
-            "heading": "Data exchanges",
             "provision_id": "article-36",
+            "heading": "Data exchanges",
             "instrument": "SCA-RTS (EU) 2018/389"
           }
         },
-        "score": 0.37561994791030884
+        "score": 0.37605011463165283
+      },
+      {
+        "chunk": {
+          "id": "reg:sca_rts:article-4",
+          "text": "SCA-RTS (EU) 2018/389, article 4 — CHAPTER II SECURITY MEASURES FOR THE APPLICATION OF STRONG CUSTOMER AUTHENTICATION — Authentication code\n\n(1) Where payment service providers apply strong customer authentication in accordance with Article 97(1) of Directive (EU) 2015/2366, the authentication shall be based on two or more elements which are categorised as knowledge, possession and inherence and shall result in the generation of an authentication code.\nThe authentication code shall be only accepted once by the payment service provider when the payer uses the authentication code to access its payment account online, to initiate an electronic payment transaction or to carry out any action through a remote channel which may imply a risk of payment fraud or other abuses.\n(2) For the purpose of paragraph 1, payment service providers shall adopt security measures ensuring that each of the following requirements is met:\n(a) no information on any of the elements referred to in paragraph 1 can be derived from the disclosure of the authentication code;\n(b) it is not possible to generate a new authentication code based on the knowledge of any other authentication code previously generated;\n(c) the authentication code cannot be forged.\n(3) Payment service providers shall ensure that the authentication by means of generating an authentication code includes each of the following measures:\n(a) where the authentication for remote access, remote electronic payments and any other actions through a remote channel which may imply a risk of payment fraud or other abuses has failed to generate an authentication code for the purposes of paragraph 1, it shall not be possible to identify which of the elements referred to in that paragraph was incorrect;\n(b) the number of failed authentication attempts that can take place consecutively, after which the actions referred to in Article 97(1) of Directive (EU) 2015/2366 shall be temporarily or permanently blocked, shall not exceed five within a given period of time;\n(c) the communication sessions are protected against the capture of authentication data transmitted during the authentication and against manipulation by unauthorised parties in accordance with the requirements in Chapter V;\n(d) the maximum time without activity by the payer after being authenticated for accessing its payment account online shall not exceed 5 minutes.\n(4) Where the block referred to in paragraph 3(b) is temporary, the duration of that block and the number of retries shall be established based on the characteristics of the service provided to the payer and all the relevant risks involved, taking into account, at a minimum, the factors referred to in Article 2(2).\nThe payer shall be alerted before the block is made permanent.\nWhere the block has been made permanent, a secure procedure shall be established allowing the payer to regain use of the blocked electronic payment instruments.",
+          "collection": "regulation",
+          "citation": "SCA-RTS (EU) 2018/389, article 4",
+          "source_url": "https://www.legislation.gov.uk/eur/2018/389/article/4",
+          "metadata": {
+            "heading": "Authentication code",
+            "instrument": "SCA-RTS (EU) 2018/389",
+            "provision_id": "article-4"
+          }
+        },
+        "score": 0.37334001064300537
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-26",
+          "text": "PSR 2017, regulation 26 — PART 3 Authorised Payment Institutions — Application of regulations 27 to 30 to account information service providers\n\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 26",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/26",
+          "metadata": {
+            "heading": "Application of regulations 27 to 30 to account information service providers",
+            "provision_id": "regulation-26",
+            "instrument": "PSR 2017"
+          }
+        },
+        "score": 0.36790966987609863
+      },
+      {
+        "chunk": {
+          "id": "reg:psr_2017:regulation-42",
+          "text": "PSR 2017, regulation 42 — PART 6 Information Requirements for Payment Services — Disapplication of certain regulations in the case of low-value payment instruments\n\n(1) This regulation applies in respect of payment instruments which, under the framework contract governing their use—\n(a) can be used only to execute individual payment transactions of 30 euros or less, or in relation to payment transactions executed wholly within the United Kingdom, 60 euros or less;\n(b) have a spending limit of 150 euros or, where payment transactions must be executed wholly within the United Kingdom, 300 euros; or\n(c) store funds that do not exceed 500 euros at any time.\n(2) Where this regulation applies—\n(a) regulations 48 and 52 do not apply and the payment service provider is only required to provide the payer with information about the main characteristics of the payment service, including—\n(i) the way in which the payment instrument can be used;\n(ii) the liability of the payer, as set out in regulation 77 (payer or payee's liability for unauthorised payment transactions);\n(iii) charges levied;\n(iv) any other material information the payer might need to take an informed decision; and\n(v) an indication of where the information specified in Schedule 4 (prior general information for framework contracts) is made available in an easily accessible manner;\n(b) the parties may agree that regulations 53 and 54 do not apply and instead—\n(i) the payment service provider must provide or make available a reference enabling the payment service user to identify the payment transaction, the amount of the payment transaction and any charges payable in respect of the payment transaction;\n(ii) in the case of several payment transactions of the same kind made to the same payee, the payment service provider must provide or make available to the payment service user information about the total amount of the payment transactions and any charges for those payment transactions; or\n(iii) where the payment instrument is used anonymously or the payment service provider is not otherwise technically able to provide or make available the information specified in paragraph (i) or (ii), the payment service provider must enable the payer to verify the amount of funds stored; and\n(c) the parties may agree that regulation 55(1) does not apply to information provided or made available in accordance with regulation 50.",
+          "collection": "regulation",
+          "citation": "PSR 2017, regulation 42",
+          "source_url": "https://www.legislation.gov.uk/uksi/2017/752/regulation/42",
+          "metadata": {
+            "provision_id": "regulation-42",
+            "instrument": "PSR 2017",
+            "heading": "Disapplication of certain regulations in the case of low-value payment instruments"
+          }
+        },
+        "score": 0.3645840287208557
       }
     ]
   }
