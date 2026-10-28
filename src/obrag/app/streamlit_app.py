@@ -37,6 +37,15 @@ def summary_rows(summary: dict) -> list[dict]:
     return [{"band": band, **summary[band]} for band in ordered if band in summary]
 
 
+def used_router(run: dict) -> bool:
+    # Runs saved before the use_router flag existed all called the router.
+    return run["config"].get("use_router", True)
+
+
+def drop_routing(rows: list[dict]) -> list[dict]:
+    return [{k: v for k, v in row.items() if k not in ("routing_accuracy", "routing_correct")} for row in rows]
+
+
 
 def render_ask_tab(settings) -> None:
     st.caption(f"Snapshot: {SNAPSHOT_DATE}")
@@ -85,11 +94,14 @@ def render_eval_tab(settings) -> None:
     if not runs:
         st.info("No evaluation runs recorded yet. Run `python -m obrag.evaluation.runner --label baseline`.")
         return
-    labels = {f"{r['id']}: {r['label']} ({r['created_at']})": r["id"] for r in runs}
-    chosen = st.selectbox("Run", list(labels))
-    run_id = labels[chosen]
-    results = store.results(run_id)
-    st.dataframe(summary_rows(summarise(results)))
+    labels = {f"{r['id']}: {r['label']} ({r['created_at']})": r for r in runs}
+    run = labels[st.selectbox("Run", list(labels))]
+    results = store.results(run["id"])
+    rows = summary_rows(summarise(results))
+    if not used_router(run):
+        st.caption("Routing not scored: this run searched both collections for every question.")
+        rows, results = drop_routing(rows), drop_routing(results)
+    st.dataframe(rows)
     with st.expander(f"Per-question results ({len(results)})"):
         st.dataframe(results)
 
