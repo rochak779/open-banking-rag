@@ -54,7 +54,9 @@ class Settings:
     embedding_model: str = "voyage-4-lite"
 
     obl_spec_tag: str = "v4.0.1-Update-1"
-    top_k: int = 6
+    # 12 since the router went off: every question searches both collections and
+    # each gets an equal share, so 12 keeps the 6 per side a routed question had.
+    top_k: int = 12
     # Retrieval score floor. Tuned on voyage-4-lite (2026-09-25): off-topic questions
     # topped out at 0.244, the weakest on-topic question scored 0.312. Score scales
     # differ between embedding models, so re-tune it whenever the model changes.
