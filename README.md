@@ -28,7 +28,7 @@ Generic RAG breaks on this material. Fixed-size chunks cut through regulation nu
 - **Declining beats guessing.** An answer with no valid citation is withheld, and the sources are shown instead. This cost one correct answer in the latest run, but an answer nobody can check should not be shown.
 - **Chunk by the source's own structure, not by size.** One regulation or one API operation per chunk, with links built from the source's own identifiers. Checking the output against the source exposed that the obvious parser had silently dropped 35 amended regulations.
 - **Measure before adopting.** Expanding abbreviations fixed "SCA" and "VRP" but broke "AIS", so it was dropped and the gap is tracked in the eval instead. The legal-domain embedding model retrieved worse sources (0.41 vs 0.55 relevance) at six times the price, so the general model stayed.
-- **Keyword rules can widen a search, never narrow it.** The original keyword shortcut caused 5 of the 6 cross-cutting misses by sending "under the PSRs… which endpoints?" to the law only.
+- **Cut a part when it stops paying for itself.** Fixing the router lifted cross-cutting routing from 4/10 to 8/10, then its free-tier model slowed to 95 seconds a call. It ran past its 8-second deadline on every call measured and fell back to searching both sources anyway, so it was switched off. Measuring the cost caught a law question losing its definition to API results. Giving each source 6 of the top 12 results fixed that, and cross-cutting questions went from 5/10 to 8/10 correct decisions.
 
 ## Results & evidence
 
@@ -37,12 +37,11 @@ Measured on a 40-question golden set in four bands of 10 (law only, spec only, c
 | | Result |
 |---|---|
 | Unanswerable questions correctly declined | **10/10** in every run, including a trap question with a related but wrong article retrievable |
-| Routing to the right source(s), answerable questions | 21/30 → **26/30** after fixing the router (cross-cutting: 4/10 → 8/10) |
-| Correct answer-or-decline decision, answerable questions | 21/30 (cross-cutting 5/10) |
-| Groundedness / correctness (LLM-judged, relative) | 0.99 / 0.53 |
+| Correct answer-or-decline decision, answerable questions | **25/30** (cross-cutting 8/10), up from 21/30 (5/10) once each source got 6 of the top 12 results |
+| Groundedness / correctness (LLM-judged, relative) | 0.99 / 0.71 |
 | Embedding A/B | `voyage-4-lite` beat the legal-domain `voyage-law-2` on retrieval relevance (0.55 vs 0.41) at equal correctness and a sixth of the price |
 
-The weak spot is stated, not hidden: questions that bridge a regulation and an endpoint are still often declined (5/10 correct decisions). The case study explains why.
+The weak spot is stated, not hidden: spec-only questions are now the weakest band (7/10 correct decisions, correctness 0.59). Of the three misses, one asks about a "variable recurring payment", a phrase the spec never uses; one is a field-level question the index can't answer by design; and one gave the right facts but framed them as a refusal. The case study has the detail.
 
 ## Scope & limits
 
@@ -56,7 +55,6 @@ The weak spot is stated, not hidden: questions that bridge a regulation and an e
 
 - Add the FCA Handbook and the FCA's current SCA-RTS, replacing the retained EU text.
 - Hybrid keyword and vector search, aimed at the abbreviation gap the eval measures.
-- Let the generator connect law and API only when both kinds of source were retrieved (the latest run showed it leaking into law-only questions).
 - Measure run-to-run variance, so small score differences can be trusted.
 
 <details>

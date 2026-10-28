@@ -14,7 +14,7 @@ The standard recipe (split text into fixed windows, embed, retrieve, generate) b
 
 ## Architecture
 
-See [architecture.md](architecture.md). In short: two collections (regulation, spec), a small-model router whose keyword rules can only widen a search to both collections, a similarity floor that lets off-topic questions reach zero results, an equal share of the top 6 for each routed collection, and a generator that must cite numbered sources or reply `INSUFFICIENT_CONTEXT`. No RAG framework: each stage is a short, tested Python module.
+See [architecture.md](architecture.md). In short: two collections (regulation, spec), both searched for every question, a similarity floor that lets off-topic questions reach zero results, 6 of the top 12 sources reserved for each collection, and a generator that must cite numbered sources or reply `INSUFFICIENT_CONTEXT`. Runs 1 to 4 also used a small-model router to choose the collections; it was switched off after launch (see [Switching the router off](#switching-the-router-off)). No RAG framework: each stage is a short, tested Python module.
 
 ## How it was evaluated
 
@@ -25,7 +25,7 @@ Four scores per question:
 | Metric | How it is scored | Trust it as |
 |---|---|---|
 | Refusal accuracy | truth table: answered vs refused, against whether the question is answerable | absolute |
-| Routing accuracy | set comparison of the collections chosen vs expected | absolute |
+| Routing accuracy | set comparison of the collections chosen vs expected (runs 1 to 4, while the router was on) | absolute |
 | Retrieval relevance | LLM judge: fraction of retrieved sources that could help answer | relative |
 | Groundedness | LLM judge: are the answer's claims supported by its sources? | relative |
 | Correctness | LLM judge: fraction of expected points the answer makes | relative |
@@ -34,7 +34,7 @@ The judge is Gemma 4 31B, a different model family from the Gemini generator. Be
 
 ## Results
 
-Four runs over the same 40 questions, all with `gemini-3.5-flash-lite` generating and Gemma 4 31B judging. Every number below comes from `summarise()` over `data/eval.db`.
+Six runs over the same 40 questions, all with `gemini-3.5-flash-lite` generating and Gemma 4 31B judging. Every number below comes from `summarise()` over `data/eval.db`.
 
 **It declines what it cannot answer: 10 of 10 unanswerable questions were refused in every run.** That includes the trap question about the FCA's article 10A. A related but wrong article (article 10) is retrievable, and the system still declined rather than answering from it.
 
@@ -70,6 +70,30 @@ A trade, not a clean win. The band it was aimed at improved: cross-06 is now ans
 
 The remaining cross-cutting refusals are not a prompt problem. cross-01 and cross-04 are the abbreviation gap ("SCA", "VRP"). cross-07 and cross-08 never retrieve regulation 69, the provision that answers them. The next measured change would apply the bridging instruction only when the retrieved sources include both law and API chunks, which should keep the cross-cutting gain without the reg-02 leak.
 
+### Switching the router off
+
+After launch, the demo took about a minute to open. On every cold start it answered its four example questions live, and each answer waited on the router. The router's model, `gemini-3.1-flash-lite`, answered in 2.6 to 6 seconds when it was chosen. On 22 October one call took 95 seconds. Over two days of testing, 6 of 6 calls ran past the router's 8-second deadline, and a timeout falls back to searching both collections. In practice the app was already running without routing: the router added 8 seconds to every question and changed nothing.
+
+The router is now off, and the example answers ship with the app, which opens in about 2 seconds. Run 5 measured the cost. Answer-or-decline decisions held (22/30, against 21/30 in run 4), but every question now split the top 6 sources 3 and 3, and law-only retrieval relevance fell from 0.67 to 0.38. On reg-03, "What is a payment initiation service?", the definition in regulation 2 ranked 5th among law hits, so API endpoints pushed it out. The answer was still right, but it cited regulations 44 and 69 and Schedule 1, and its groundedness fell from 1.0 to 0.0.
+
+Run 6 gives each collection 6 of the top 12 sources, the share a routed one-sided question used to get.
+
+| Band | Refusal decision correct (run 4 → 5 → 6) | Correctness (run 4 → 5 → 6) |
+|---|---|---|
+| Regulation-only (10) | 8 → 9 → **10** | 0.68 → 0.71 → **0.88** |
+| Spec-only (10) | 8 → 8 → 7 | 0.54 → 0.63 → 0.59 |
+| Cross-cutting (10) | 5 → 5 → **8** | 0.37 → 0.29 → **0.67** |
+| All answerable (30) | 21 → 22 → **25** | 0.53 → 0.56 → **0.71** |
+| Unanswerable (10) | 10 → 10 → 10 | – |
+
+The cross-cutting gain reached two refusals the run 4 section put down to vocabulary and retrieval. Both turned out to be slot limits. Run 4 routed cross-04 and cross-07 to both collections, which left the law 3 slots. Regulation 67, which answers cross-04, ranks 4th among law hits; regulation 69 ranks 6th for cross-07. With 6 law slots, both questions are answered and both regulations cited. cross-01 and cross-08 are still declined. reg-02, the law-only question the bridging prompt hurt in run 4, is back to 1.0, though it cites an API endpoint beside two regulations. With both collections always searched, the change planned in run 4 (bridging only when law and API sources are both retrieved) no longer applies.
+
+What it cost:
+
+- **One spec-only decision.** spec-04, on reusing an `x-idempotency-key`, gave the right facts but framed them as a refusal. The same question answered normally when the example answers were regenerated, so this reads as run-to-run variance, which is still unmeasured.
+- **Retrieval relevance on one-sided questions** (law 0.33, spec 0.58). The judge scores the share of sources that could help, and a law-only question now always carries 6 API sources. Correctness rose anyway.
+- **About twice the tokens per question** to the generator, roughly 5K, inside the free tier.
+
 ### Embedding comparison: the legal model lost
 
 Same pipeline, different embeddings (run 1 against run 2, answerable questions):
@@ -86,7 +110,7 @@ The legal-domain model retrieved worse sources (0.41 against 0.55, and 0.31 agai
 
 ### Scores that could not be measured
 
-A judge call failing (Gemma server errors or its 16K tokens-per-minute limit) leaves a gap rather than a guess: 4, 7, 2 and 2 missing scores in runs 1 to 4, out of 120 judged values per run. Groundedness in runs 1 and 2 was re-judged after a bug where the judge numbered sources differently from the answer's citations. That bug scored a verbatim, correctly cited definition 0.0.
+A judge call failing (Gemma server errors or its 16K tokens-per-minute limit) leaves a gap rather than a guess: 4, 7, 2, 2, 14 and 10 missing scores in runs 1 to 6, out of 120 judged values per run. Most gaps in runs 5 and 6 are retrieval relevance (10 in each), which cannot be re-judged later: a run stores the answer's citations, not the full retrieved set. Groundedness in runs 1 and 2 was re-judged after a bug where the judge numbered sources differently from the answer's citations. That bug scored a verbatim, correctly cited definition 0.0.
 
 ## What did not work, and what changed
 
@@ -94,7 +118,7 @@ Each of these was found by measuring, not by reasoning about the design:
 
 - **The router never answered "both".** With the first prompt, all three mixed test questions were routed to the law only, silently dropping the API half. Rewriting the prompt to say when "both" applies fixed it: 12 of 12 labelled questions routed correctly. That was a small hand-labelled set; the golden set measures it properly.
 - **The planned similarity floor filtered nothing.** At 0.2, nonsense questions (capital of France, banana bread) still retrieved sources: their top scores reached 0.244. Real questions started at 0.312. The floor is now 0.28, and off-topic questions get zero results and a refusal without a model call.
-- **One collection crowded out the other.** On the headline question, a plain merge by score gave the generator 5 near-identical consent endpoints and 1 regulation, so the model correctly refused. Each routed collection now gets an equal share of the top 6.
+- **One collection crowded out the other.** On the headline question, a plain merge by score gave the generator 5 near-identical consent endpoints and 1 regulation, so the model correctly refused. Each collection now gets an equal share: 3 of the top 6 while the router was on, 6 of the top 12 since.
 - **Expanding abbreviations was tried and dropped.** Appending "strong customer authentication" to "SCA" moved regulation 100 from rank 27 to 5, and "VRP" from 30 to 4. But it left "TPP" unchanged and pushed "What is an AIS?" from rank 1 to 4. A mixed result, so it was not adopted; the golden set's abbreviation probes measure the gap instead.
 - **Free-tier limits shaped the model choices.** `gemini-3.8-flash` allows 20 requests a day on the free tier, and the planned judge, `gemini-3.1-pro-preview`, allows none. Generation moved to `gemini-3.5-flash-lite` (500/day), and judging to Gemma.
 
@@ -113,5 +137,4 @@ Each of these was found by measuring, not by reasoning about the design:
 - The FCA Handbook and the FCA's current SCA-RTS, replacing the retained EU text.
 - Schema-field chunks for the API spec.
 - Hybrid (keyword + vector) retrieval, aimed at the abbreviation gap the golden set measures.
-- The bridging instruction applied only when both law and API sources are retrieved (run 4 showed it leaking into law-only questions).
 - A run-to-run variance measurement, so small score differences can be read with confidence.
