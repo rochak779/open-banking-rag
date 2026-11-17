@@ -1,13 +1,13 @@
 """Four scorers: three LLM judges and one truth table.
 
-Hand-written rather than Ragas — see the note in the plan. Each judge gets the
-narrowest possible question and returns a single number, because a judge asked
-to assess several things at once returns an average of vibes.
+Hand-written rather than Ragas. Each judge gets the narrowest possible question
+and returns a single number, because a judge asked to assess several things at
+once returns an average of vibes.
 
 The judge model comes from settings. On the free tier it is Gemma 4 31B (set
 via OBRAG_JUDGE_MODEL), a different model family from the Gemini generator,
 which softens the self-grading problem without removing it: same vendor, and
-an open model smaller than the planned Gemini Pro judge. Session 12 must say
+an open model smaller than the planned Gemini Pro judge. The case study says
 so. score_refusal, the metric that matters most, has no model in it at all.
 """
 
