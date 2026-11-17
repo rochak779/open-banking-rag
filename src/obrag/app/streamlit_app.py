@@ -22,6 +22,9 @@ from obrag.query.pipeline import ask
 # One generator call per question, against a 500/day free quota shared by all
 # visitors.
 MAX_QUERIES_PER_SESSION = 10
+# The longest test question is about 160 characters. The cap stops a pasted
+# document being sent to the embedding and answer APIs.
+MAX_QUESTION_CHARS = 500
 
 STYLES = Path(__file__).with_name("styles.css").read_text(encoding="utf-8")
 
@@ -56,6 +59,7 @@ def render_ask_tab(settings, runs: list[dict]) -> None:
                 "Ask a question about UK Open Banking",
                 placeholder="Ask a question about UK Open Banking",
                 label_visibility="collapsed",
+                max_chars=MAX_QUESTION_CHARS,
             )
             submitted = row.form_submit_button("Ask", type="primary")
         st.html('<p class="ob-try">Or open a saved example</p>')
@@ -67,7 +71,8 @@ def render_ask_tab(settings, runs: list[dict]) -> None:
     st.html(tiles.disclaimer_html(DISCLAIMER))
 
     if submitted and question.strip():
-        st.session_state["question"] = question
+        # The box enforces the cap in the browser; this holds it on the server too.
+        st.session_state["question"] = question[:MAX_QUESTION_CHARS]
     question = st.session_state.get("question")
     if question:
         render_answer(question, settings)
