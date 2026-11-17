@@ -6,3 +6,4 @@ data/raw/
 data/chroma-*/
 .pytest_cache/
 .DS_Store
+.gemini/
