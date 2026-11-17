@@ -3,3 +3,22 @@ headless = true
 
 [browser]
 gatherUsageStats = false
+
+[client]
+# Visitors get no developer menu; the page is the product.
+toolbarMode = "minimal"
+
+# Black canvas, one lime accent, white tiles. The tile and widget styling that
+# the theme options cannot reach lives in src/obrag/app/styles.css.
+[theme]
+base = "dark"
+primaryColor = "#CFFE32"
+backgroundColor = "#000000"
+secondaryBackgroundColor = "#14181B"
+textColor = "#FDFEFF"
+borderColor = "#2B3238"
+font = "Hanken Grotesk:https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap, sans-serif"
+headingFont = "Poppins:https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap, sans-serif"
+baseFontSize = 16
+baseRadius = "1rem"
+buttonRadius = "full"
