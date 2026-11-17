@@ -1,10 +1,10 @@
 [project]
 name = "obrag"
 version = "0.1.0"
-description = "Add your description here"
+description = "Question answering over UK Open Banking law and the Read/Write API spec, with citations"
 readme = "README.md"
 authors = [
-    { name = "Rochak Agarwal", email = "rochak.ag779@gmail.com" }
+    { name = "Rochak Agarwal" }
 ]
 requires-python = ">=3.12"
 dependencies = [
