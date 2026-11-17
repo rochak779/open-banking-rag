@@ -149,11 +149,10 @@ def render_eval_tab(settings, runs: list[dict]) -> None:
             f"are scored from 0 to 1 by a second model, so use them to compare runs.{routing_note}</p>"
         )
 
-    with st.container(key="tables_tile"):
-        with st.expander("Summary table"):
-            st.dataframe(rows)
-        with st.expander(f"Per-question results ({len(results)})"):
-            st.dataframe(results)
+    with st.expander("Summary table"):
+        st.dataframe(rows)
+    with st.expander(f"Per-question results ({len(results)})"):
+        st.dataframe(results)
 
 
 def main() -> None:
