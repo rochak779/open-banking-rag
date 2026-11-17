@@ -6,13 +6,13 @@
 
 <sub>Free hosting: the first visit after a quiet spell can take a minute to wake up.</sub>
 
-![UK Open Banking RAG question screen with example questions](docs/readme/screenshot.png)
+![UK Open Banking RAG answering a funds-check question, citing PSR regulation 68 and the Confirmation of Funds API, with its sources labelled Law and API spec](docs/readme/screenshot.png)
 
 > This tool is a technical demonstration. It is not legal, regulatory or compliance advice. Answers are drawn from a snapshot taken 2026-09-18 and may be out of date. SCA-RTS citations are the retained EU text published on legislation.gov.uk, which does not include the FCA's later amendments. Always check the cited source.
 
 ## The problem
 
-Building on UK Open Banking means reading two very different texts side by side: the law (the Payment Services Regulations 2017 and the SCA-RTS) and the Open Banking Read/Write API specification. The useful questions sit across both, such as *"does the payment consent flow satisfy strong customer authentication?"*, and a good answer cites the regulation and the endpoint.
+Building on UK Open Banking means reading two very different texts side by side: the law (the Payment Services Regulations 2017 and the SCA-RTS) and the Open Banking Read/Write API specification. The useful questions sit across both, such as *"what must a funds confirmation for a card-based payment contain, and how does the Confirmation of Funds API return it?"*, and a good answer cites the regulation and the endpoint: here, PSR regulation 68 and `POST /funds-confirmations`.
 
 Generic RAG breaks on this material. Fixed-size chunks cut through regulation numbers and endpoint paths, which are the citations. Practitioners say "SCA" and "VRP" where the law spells things out. And in a compliance-adjacent tool, a confident answer with the wrong citation is worse than no answer.
 
