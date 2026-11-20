@@ -179,6 +179,10 @@ def main() -> None:
         render_ask_tab(settings, runs)
     with eval_tab:
         render_eval_tab(settings, runs)
+    st.html(
+        '<p class="ob-foot">Built by '
+        '<a href="https://www.rochakagarwal.com" target="_blank" rel="noopener">Rochak Agarwal</a></p>'
+    )
 
 
 if __name__ == "__main__":
