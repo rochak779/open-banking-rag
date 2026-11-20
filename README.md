@@ -82,3 +82,7 @@ Run the tests with `uv run pytest`, and the evaluation with `uv run python -m ob
 - The Payment Services Regulations 2017: Crown copyright, from [legislation.gov.uk](https://www.legislation.gov.uk/uksi/2017/752), reused under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
 - Commission Delegated Regulation (EU) 2018/389: as published by [legislation.gov.uk](https://www.legislation.gov.uk/eur/2018/389); © European Union.
 - Open Banking Read/Write API specifications: © Open Banking Limited, from [OpenBankingUK/read-write-api-specs](https://github.com/OpenBankingUK/read-write-api-specs), under the [Open Banking Open Licence](https://www.openbanking.org.uk/open-licence/).
+
+---
+
+Built by [Rochak Agarwal](https://www.rochakagarwal.com). Read the full case study: [Open Banking RAG on rochakagarwal.com](https://www.rochakagarwal.com/projects/open-banking-rag).
